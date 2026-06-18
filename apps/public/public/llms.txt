@@ -1,0 +1,30 @@
+# Atlas
+
+> Atlas is an all-in-one field service management (FSM) platform for growing trade
+> businesses — HVAC, plumbing, electrical, landscaping, and cleaning companies with
+> roughly 1–15 technicians. It brings scheduling, dispatch, estimates, invoicing, and
+> payments into one place, with transparent pricing and fast setup. Atlas is currently
+> in early access (pre-launch).
+
+## Key facts
+
+- Category: Field service management (FSM) software
+- Audience: Owner-operators and growing trade/home-service businesses (~1–15 techs)
+- Trades served: HVAC, plumbing, electrical, landscaping, cleaning, and similar
+- Core capabilities (in development): scheduling & dispatch, estimates → invoices →
+  payments, a mobile app built to work with poor signal, and transparent published pricing
+- Positioning: a modern, fairly priced alternative to legacy tools that are either too
+  expensive (enterprise platforms) or too limited (cheap point tools)
+- Status: Early access — onboarding businesses in waves; join the waitlist to get an invite
+- Pricing: Transparent and published (no "contact sales" tiers); founding-customer pricing
+  for early-access members
+
+## Primary pages
+
+- Home / early access: https://www.atlasfsm.com/
+- Privacy Policy: https://www.atlasfsm.com/privacy
+- Terms of Service: https://www.atlasfsm.com/terms
+
+## Contact
+
+- Email: hello@atlasfsm.com

@@ -9,7 +9,14 @@
       "Bash(git symbolic-ref *)",
       "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('vitest:', p.devDependencies.vitest\\)\")",
       "Bash(echo \"EXIT:$?\")",
-      "Bash(docker version *)"
+      "Bash(docker version *)",
+      "Bash(echo \"COMMIT_EXIT:$?\")",
+      "Bash(node -e \"console.log\\('phosphor:', require\\('./package.json'\\).dependencies['@phosphor-icons/react']\\)\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" -X POST http://localhost:3100/api/waitlist -H \"Content-Type: application/json\" -d '{\"email\":\"Owner@Shop.com\"}')",
+      "Bash(curl -s -w \" HTTP %{http_code}\\\\n\" -X POST http://localhost:3100/api/waitlist -H \"Content-Type: application/json\" -d '{\"email\":\"nope\"}')",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" -X POST http://localhost:3100/api/waitlist -H \"Content-Type: application/json\" -d '{\"email\":\"bot@x.com\",\"website\":\"spam\"}')",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" -X POST http://localhost:3100/api/waitlist -H \"Content-Type: application/json\" -d '{\"email\":\"tech@hvacpros.io\"}')",
+      "Bash(docker volume *)"
     ]
   }
 }

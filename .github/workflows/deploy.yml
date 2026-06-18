@@ -86,16 +86,22 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          # Write the key stripping any CR (CRLF paste) and forcing a trailing
+          # newline — both are common causes of "error in libcrypto".
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
+          # IdentitiesOnly stops ssh from offering the runner's other keys,
+          # which otherwise triggers "Too many authentication failures".
+          SSH_OPTS="-i $HOME/.ssh/id_ed25519 -o IdentitiesOnly=yes"
+
           # Ship the infra files (compose, Caddyfile, non-secret .env) to the box.
-          ssh -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" "mkdir -p ~/atlas-serviceos"
-          scp -i ~/.ssh/id_ed25519 \
+          ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" "mkdir -p ~/atlas-serviceos"
+          scp $SSH_OPTS \
             infra/docker-compose.yml infra/Caddyfile infra/.env \
             "$SSH_USER@$SSH_HOST:~/atlas-serviceos/"
 
           # Pull the image we just built and roll the stack forward to this SHA.
-          ssh -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" \
+          ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" \
             "cd ~/atlas-serviceos && export IMAGE_TAG=$IMAGE_TAG && docker compose pull && docker compose up -d --remove-orphans && docker image prune -f"

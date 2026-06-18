@@ -34,6 +34,12 @@ COPY --from=builder --chown=node:node /app/public ./public
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
+# Writable sink for the waitlist store. A named volume mounted here inherits
+# this ownership on first creation, so the non-root 'node' user can append.
+RUN mkdir -p /data && chown node:node /data
+VOLUME /data
+ENV WAITLIST_STORE_PATH=/data/waitlist.jsonl
+
 USER node
 EXPOSE 3000
 

@@ -1,0 +1,31 @@
+name: Lighthouse
+
+# Informational performance / a11y / SEO budgets on PRs. Non-blocking
+# (continue-on-error) so flaky perf numbers never block a merge — read the
+# report link in the job log. Tighten to hard failures once numbers are stable.
+on:
+  pull_request:
+    paths:
+      - "apps/public/**"
+      - ".github/workflows/lighthouse.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: apps/public
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/public/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npx --yes @lhci/cli@0.14.x autorun

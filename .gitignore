@@ -12,6 +12,10 @@ dist/
 
 # Test / coverage
 coverage/
+.lighthouseci/
+
+# Local waitlist store (dev fallback sink for the waitlist API)
+.data/
 
 # Env files are ignored by default (may hold secrets)...
 .env

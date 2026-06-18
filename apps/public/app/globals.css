@@ -1,26 +1,106 @@
 @import "tailwindcss";
 
+/* ── Design tokens ─────────────────────────────────────────────────────────
+   Raw values live in :root and flip under prefers-color-scheme: dark. They're
+   mapped into Tailwind's theme below so utilities (bg-surface, text-muted,
+   bg-brand, …) resolve to these vars and react to color scheme automatically.
+   All text/background pairings target WCAG 2.2 AA (≥4.5:1 body, ≥3:1 large). */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --surface: #f8fafc;
+  --surface-2: #f1f5f9;
+  --foreground: #0b1220;
+  --muted: #475569; /* 7.5:1 on white */
+  --border: #e2e8f0;
+  --brand: #2563eb;
+  --brand-strong: #1d4ed8; /* link/text on light → 5.2:1 */
+  --brand-foreground: #ffffff;
+  --accent: #b45309; /* amber-700, AA as text on light */
+  --ring: #2563eb;
+  --success: #15803d;
+  --warning: #b45309;
+  --error: #dc2626;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0a0f1c;
+    --surface: #0f1626;
+    --surface-2: #151f33;
+    --foreground: #e7eef8;
+    --muted: #9fb0c6; /* 6.3:1 on --background */
+    --border: #21314b;
+    --brand: #3b82f6;
+    --brand-strong: #93c5fd; /* link/text on dark */
+    --brand-foreground: #06122b;
+    --accent: #fbbf24;
+    --ring: #60a5fa;
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --error: #f87171;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-accent: var(--accent);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* A single soft elevation token keeps cards consistent. */
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px -12px rgb(15 23 42 / 0.12);
+}
+
+/* ── Base layer ────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Account for the sticky header when jumping to in-page anchors. */
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--brand) 25%, transparent);
+  }
+
+  /* Visible, consistent keyboard focus everywhere (a11y). */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* Respect users who ask for less motion (a11y / CWV). */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

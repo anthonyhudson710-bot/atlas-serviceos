@@ -1,65 +1,214 @@
-import Image from "next/image";
+import {
+  CalendarCheck,
+  Receipt,
+  DeviceMobile,
+  Tag,
+  Plus,
+} from "@phosphor-icons/react/dist/ssr";
+import { Container } from "@/components/ui/Container";
+import { Section } from "@/components/ui/Section";
+import { WaitlistForm } from "@/components/WaitlistForm";
+import { JsonLd } from "@/components/JsonLd";
+import { faqSchema } from "@/lib/schema";
+import { hero, pillars, why, howItWorks, faqs, finalCta } from "@/lib/content";
+
+const TRADES = ["HVAC", "Plumbing", "Electrical", "Landscaping", "Cleaning"];
+
+function PillarIcon({ name }: { name: string }) {
+  const cls = "size-6 text-brand";
+  switch (name) {
+    case "CalendarCheck":
+      return <CalendarCheck weight="bold" className={cls} aria-hidden="true" />;
+    case "Receipt":
+      return <Receipt weight="bold" className={cls} aria-hidden="true" />;
+    case "DeviceMobile":
+      return <DeviceMobile weight="bold" className={cls} aria-hidden="true" />;
+    case "Tag":
+      return <Tag weight="bold" className={cls} aria-hidden="true" />;
+    default:
+      return null;
+  }
+}
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <>
+      <JsonLd data={faqSchema()} />
+
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden">
+        {/* Decorative brand wash — aria-hidden, pointer-events-none. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[480px] bg-gradient-to-b from-surface to-background"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+        <Container className="pt-20 pb-16 sm:pt-28 sm:pb-24">
+          <div className="mx-auto max-w-3xl text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-muted">
+              <span className="size-1.5 rounded-full bg-brand" aria-hidden="true" />
+              {hero.eyebrow}
+            </span>
+            <h1 className="mt-6 text-balance text-4xl font-semibold tracking-tight text-foreground sm:text-5xl md:text-6xl">
+              {hero.title}
+            </h1>
+            <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-8 text-muted">
+              {hero.subtitle}
+            </p>
+
+            <div className="mx-auto mt-10 max-w-xl">
+              <WaitlistForm id="waitlist" />
+            </div>
+
+            <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted">
+              <li className="font-medium text-foreground">Built for:</li>
+              {TRADES.map((t) => (
+                <li key={t} className="flex items-center gap-2">
+                  <span className="size-1 rounded-full bg-muted" aria-hidden="true" />
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Container>
+      </section>
+
+      {/* ── What we're building ──────────────────────────────────────────── */}
+      <Section id="what" surface labelledby="what-heading">
+        <Container>
+          <div className="mx-auto max-w-2xl text-center">
+            <h2
+              id="what-heading"
+              className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              One platform, from the first call to getting paid.
+            </h2>
+            <p className="mt-4 text-lg text-muted">
+              Everything a growing trade business runs on — without juggling five
+              apps and a spreadsheet.
+            </p>
+          </div>
+
+          <ul className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {pillars.map((p) => (
+              <li
+                key={p.title}
+                className="rounded-2xl border border-border bg-background p-6 shadow-card"
+              >
+                <span className="grid size-12 place-items-center rounded-xl bg-surface-2">
+                  <PillarIcon name={p.icon} />
+                </span>
+                <h3 className="mt-5 text-lg font-semibold text-foreground">{p.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted">{p.body}</p>
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </Section>
+
+      {/* ── Why Atlas ────────────────────────────────────────────────────── */}
+      <Section id="why" labelledby="why-heading">
+        <Container>
+          <div className="mx-auto grid max-w-5xl gap-12 lg:grid-cols-2 lg:items-center">
+            <div>
+              <h2
+                id="why-heading"
+                className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
+              >
+                {why.title}
+              </h2>
+              {why.body.map((para) => (
+                <p key={para.slice(0, 24)} className="mt-5 text-lg leading-8 text-muted">
+                  {para}
+                </p>
+              ))}
+              <p className="mt-6 font-medium text-foreground">{why.signature}</p>
+            </div>
+
+            <div className="rounded-3xl border border-border bg-surface p-8 shadow-card">
+              <p className="text-xl font-medium leading-9 text-foreground text-balance">
+                “The right tool should pay for itself in the first week — not take a
+                week just to set up.”
+              </p>
+              <p className="mt-6 text-sm text-muted">
+                Our north star: a platform an owner-operator can adopt on a Sunday
+                and run their whole week on by Monday.
+              </p>
+            </div>
+          </div>
+        </Container>
+      </Section>
+
+      {/* ── How early access works ───────────────────────────────────────── */}
+      <Section surface labelledby="how-heading">
+        <Container>
+          <div className="mx-auto max-w-2xl text-center">
+            <h2
+              id="how-heading"
+              className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+              {howItWorks.title}
+            </h2>
+          </div>
+          <ol className="mx-auto mt-14 grid max-w-4xl gap-8 sm:grid-cols-3">
+            {howItWorks.steps.map((s) => (
+              <li key={s.step}>
+                <span className="font-mono text-sm font-semibold text-brand-strong">
+                  {s.step}
+                </span>
+                <h3 className="mt-3 text-lg font-semibold text-foreground">{s.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted">{s.body}</p>
+              </li>
+            ))}
+          </ol>
+        </Container>
+      </Section>
+
+      {/* ── FAQ (native <details> — accessible, zero JS) ─────────────────── */}
+      <Section id="faq" labelledby="faq-heading">
+        <Container>
+          <div className="mx-auto max-w-3xl">
+            <h2
+              id="faq-heading"
+              className="text-center text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
+            >
+              Questions, answered.
+            </h2>
+            <div className="mt-12 divide-y divide-border border-y border-border">
+              {faqs.map((f) => (
+                <details key={f.q} className="group py-5">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-left text-lg font-medium text-foreground [&::-webkit-details-marker]:hidden">
+                    {f.q}
+                    <Plus
+                      size={20}
+                      className="shrink-0 text-muted transition-transform group-open:rotate-45"
+                      aria-hidden="true"
+                    />
+                  </summary>
+                  <p className="mt-3 text-base leading-7 text-muted">{f.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </Container>
+      </Section>
+
+      {/* ── Final CTA ────────────────────────────────────────────────────── */}
+      <Section surface labelledby="cta-heading">
+        <Container>
+          <div className="mx-auto max-w-2xl rounded-3xl border border-border bg-background p-10 text-center shadow-card sm:p-14">
+            <h2
+              id="cta-heading"
+              className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
+            >
+              {finalCta.title}
+            </h2>
+            <p className="mx-auto mt-4 max-w-lg text-lg text-muted">{finalCta.subtitle}</p>
+            <div className="mx-auto mt-8 max-w-xl">
+              <WaitlistForm id="waitlist-bottom" />
+            </div>
+          </div>
+        </Container>
+      </Section>
+    </>
   );
 }

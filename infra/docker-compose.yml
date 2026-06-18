@@ -28,10 +28,18 @@ services:
       NODE_ENV: production
       PORT: "3000"
       HOSTNAME: 0.0.0.0
-      NEXT_PUBLIC_SITE_URL: https://www.${DOMAIN}
+      # Runtime config (read server-side per request — these work without rebuild):
+      WAITLIST_STORE_PATH: /data/waitlist.jsonl
+      WAITLIST_WEBHOOK_URL: ${WAITLIST_WEBHOOK_URL:-} # optional ESP/CRM/automation forward
+      # NOTE: NEXT_PUBLIC_SITE_URL and NEXT_PUBLIC_PLAUSIBLE_DOMAIN are inlined at
+      # BUILD time, not here. Site URL defaults to https://www.atlasfsm.com; to
+      # enable Plausible, pass NEXT_PUBLIC_PLAUSIBLE_DOMAIN as a build arg in CI.
+    volumes:
+      - waitlist_data:/data # durable waitlist signups across deploys
     expose:
       - "3000" # internal only; Caddy is the public entrypoint
 
 volumes:
   caddy_data:
   caddy_config:
+  waitlist_data:
