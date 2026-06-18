@@ -1,0 +1,27 @@
+# Caddy auto-provisions Let's Encrypt TLS for every site block below, as long
+# as the domains' DNS A records point at this server (Cloudflare set to
+# "DNS only" / grey-cloud while certs are issued by Caddy directly).
+{
+	email {$ACME_EMAIL}
+}
+
+# Canonical host — the public marketing site.
+www.{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy public:3000
+}
+
+# Apex → www, so there is a single canonical host.
+{$DOMAIN} {
+	redir https://www.{$DOMAIN}{uri} permanent
+}
+
+# ── Future apps (separate codebases) attach here as subdomains. To add one:
+#   1. add its service to docker-compose.yml (e.g. `app`, expose 3000)
+#   2. uncomment + adjust the block below
+#   3. add an A record for the subdomain in Cloudflare
+#
+# app.{$DOMAIN} {
+# 	encode zstd gzip
+# 	reverse_proxy app:3000
+# }

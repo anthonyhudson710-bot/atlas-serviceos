@@ -1,0 +1,34 @@
+name: CI
+
+# Quality gates for every PR. main is handled by deploy.yml, which re-runs the
+# same gates before it builds/ships — so we skip main here to avoid double runs.
+on:
+  pull_request:
+  push:
+    branches-ignore:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Lint · Types · Build · Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/public
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/public/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm run test

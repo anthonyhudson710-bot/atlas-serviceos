@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Build output
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+
+# Test / coverage
+coverage/
+
+# Env files are ignored by default (may hold secrets)...
+.env
+.env.*.local
+.env.local
+*.pem
+# ...except infra/.env, which holds only non-secret prod config (DOMAIN, ACME_EMAIL).
+!infra/.env
+
+# Logs
+*-debug.log*
+logs/
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Claude Code (personal, machine-local settings only)
+.claude/settings.local.json
+
+# Deploy keys — never commit these
+atlas_deploy_key
+atlas_deploy_key.pub

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const p=require\\('./node_modules/next/package.json'\\); console.log\\('next', p.version, '| engines:', JSON.stringify\\(p.engines\\)\\)\")",
+      "Bash(npm -v)",
+      "Bash(rm -rf apps/public/.git)",
+      "Bash(git init *)",
+      "Bash(git config *)",
+      "Bash(git symbolic-ref *)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('vitest:', p.devDependencies.vitest\\)\")",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(docker version *)"
+    ]
+  }
+}
