@@ -16,7 +16,11 @@
       "Bash(curl -s -w \" HTTP %{http_code}\\\\n\" -X POST http://localhost:3100/api/waitlist -H \"Content-Type: application/json\" -d '{\"email\":\"nope\"}')",
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" -X POST http://localhost:3100/api/waitlist -H \"Content-Type: application/json\" -d '{\"email\":\"bot@x.com\",\"website\":\"spam\"}')",
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" -X POST http://localhost:3100/api/waitlist -H \"Content-Type: application/json\" -d '{\"email\":\"tech@hvacpros.io\"}')",
-      "Bash(docker volume *)"
+      "Bash(docker volume *)",
+      "Bash(curl -sS -m 12 -o /dev/null -w \"http://74.208.191.114 → HTTP %{http_code}\\\\n\" http://74.208.191.114)",
+      "Bash(curl -sS -m 15 -o /dev/null -w \"https://www.atlasfsm.com → HTTP %{http_code} \\(cert: %{ssl_verify_result}\\)\\\\n\" https://www.atlasfsm.com)",
+      "Bash(curl -sS -m 15 -o /dev/null -w \"https://atlasfsm.com → HTTP %{http_code}\\\\n\" https://atlasfsm.com)",
+      "Bash(nslookup www.atlasfsm.com)"
     ]
   }
 }

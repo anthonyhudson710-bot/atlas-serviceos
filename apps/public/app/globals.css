@@ -1,11 +1,13 @@
 @import "tailwindcss";
 
 /* ── Design tokens ─────────────────────────────────────────────────────────
-   Raw values live in :root and flip under prefers-color-scheme: dark. They're
-   mapped into Tailwind's theme below so utilities (bg-surface, text-muted,
-   bg-brand, …) resolve to these vars and react to color scheme automatically.
-   All text/background pairings target WCAG 2.2 AA (≥4.5:1 body, ≥3:1 large). */
+   Light-only palette, mapped into Tailwind's @theme below so utilities
+   (bg-surface, text-muted, bg-brand, …) resolve to these vars. All
+   text/background pairings target WCAG 2.2 AA (≥4.5:1 body, ≥3:1 large).
+   Dark mode is intentionally NOT supported on the marketing site — color-scheme
+   is pinned to light so native UI never renders dark either. */
 :root {
+  color-scheme: light;
   --background: #ffffff;
   --surface: #f8fafc;
   --surface-2: #f1f5f9;
@@ -20,25 +22,6 @@
   --success: #15803d;
   --warning: #b45309;
   --error: #dc2626;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0f1c;
-    --surface: #0f1626;
-    --surface-2: #151f33;
-    --foreground: #e7eef8;
-    --muted: #9fb0c6; /* 6.3:1 on --background */
-    --border: #21314b;
-    --brand: #3b82f6;
-    --brand-strong: #93c5fd; /* link/text on dark */
-    --brand-foreground: #06122b;
-    --accent: #fbbf24;
-    --ring: #60a5fa;
-    --success: #4ade80;
-    --warning: #fbbf24;
-    --error: #f87171;
-  }
 }
 
 @theme inline {
