@@ -53,15 +53,15 @@ export function Footer() {
               <ul className="mt-4 space-y-3">
                 {siteConfig.nav.map((item) => (
                   <li key={item.href}>
-                    <a href={item.href} className={linkCls}>
+                    <Link href={item.href} className={linkCls}>
                       {item.label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
                 <li>
-                  <a href="#waitlist" className={linkCls}>
+                  <Link href="/#waitlist" className={linkCls}>
                     Get early access
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </nav>

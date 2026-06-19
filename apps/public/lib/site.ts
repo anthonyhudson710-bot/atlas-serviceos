@@ -18,11 +18,13 @@ export const siteConfig = {
     x: "https://x.com/atlasfsm",
     linkedin: "https://www.linkedin.com/company/atlasfsm",
   },
-  // Pre-launch nav is intentionally minimal — the only job is the waitlist.
+  // Pre-launch nav is intentionally minimal. Hashes are home-absolute (/#…)
+  // so they also work when clicked from another route (e.g. /pricing).
   nav: [
-    { href: "#what", label: "What we're building" },
-    { href: "#why", label: "Why Atlas" },
-    { href: "#faq", label: "FAQ" },
+    { href: "/#what", label: "What we're building" },
+    { href: "/pricing", label: "Pricing" },
+    { href: "/#why", label: "Why Atlas" },
+    { href: "/#faq", label: "FAQ" },
   ],
 } as const;
 

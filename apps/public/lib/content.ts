@@ -105,3 +105,61 @@ export const finalCta = {
   subtitle:
     "Early-access spots are limited and going out in waves. Add your email and we'll save you a place.",
 } as const;
+
+/**
+ * Pricing — transparent tiers are a core differentiator (§1). Atlas is
+ * pre-launch, so these are indicative FOUNDING prices being finalized during
+ * early access; the on-page banner says so. Edit numbers/features here.
+ */
+export const pricing = {
+  eyebrow: "Pricing",
+  title: "Simple, transparent pricing. ",
+  titleHighlight: "No surprises.",
+  subtitle:
+    "Plans you can read right here — no “contact sales to find out what it costs.” Early-access members lock in founding rates for life.",
+  note: "These are indicative founding prices while Atlas is in early access. Final plans are confirmed at launch — join the list to lock in founding rates.",
+  tiers: [
+    {
+      name: "Starter",
+      price: "$29",
+      period: "/mo",
+      blurb: "For solo operators getting organized.",
+      featured: false,
+      features: [
+        "Scheduling & dispatch",
+        "Estimates & invoicing",
+        "Mobile app for the field",
+        "Up to 2 users",
+        "Email support",
+      ],
+    },
+    {
+      name: "Pro",
+      price: "$79",
+      period: "/mo",
+      blurb: "For growing teams that live in the field.",
+      featured: true,
+      features: [
+        "Everything in Starter",
+        "Card & bank payments",
+        "Customer CRM & history",
+        "Up to 10 users",
+        "Priority support",
+      ],
+    },
+    {
+      name: "Business",
+      price: "$149",
+      period: "/mo",
+      blurb: "For established shops scaling up.",
+      featured: false,
+      features: [
+        "Everything in Pro",
+        "Advanced reporting",
+        "Custom workflows",
+        "Unlimited users",
+        "Dedicated onboarding",
+      ],
+    },
+  ],
+} as const;

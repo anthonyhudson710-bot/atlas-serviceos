@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 
 /**
@@ -9,9 +10,12 @@ export function AnnouncementBar() {
     <div className="bg-spectrum">
       <Container className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 py-2 text-center text-sm font-semibold text-white">
         <span>Atlas is now onboarding early access.</span>
-        <a href="#waitlist" className="underline decoration-white/60 underline-offset-2 hover:decoration-white">
+        <Link
+          href="/#waitlist"
+          className="underline decoration-white/60 underline-offset-2 hover:decoration-white"
+        >
           Join the list →
-        </a>
+        </Link>
       </Container>
     </div>
   );

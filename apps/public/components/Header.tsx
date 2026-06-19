@@ -19,17 +19,17 @@ export function Header() {
 
         <nav aria-label="Primary" className="hidden items-center gap-8 md:flex">
           {siteConfig.nav.map((item) => (
-            <a
+            <Link
               key={item.href}
               href={item.href}
               className="text-sm font-semibold text-foreground transition-colors hover:text-royal"
             >
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
-        <ButtonLink href="#waitlist">Get early access</ButtonLink>
+        <ButtonLink href="/#waitlist">Get early access</ButtonLink>
       </Container>
     </header>
   );
