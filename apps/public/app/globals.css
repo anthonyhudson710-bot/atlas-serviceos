@@ -131,6 +131,19 @@
     outline-offset: 2px;
     border-radius: 4px;
   }
+
+  /* iOS Safari draws native chrome (rounded corners, inset shadow, its own
+     background) on form controls and ignores the unprefixed `appearance`.
+     Reset with the -webkit- prefix so our Tailwind bg/border/radius apply. */
+  input,
+  textarea,
+  select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: 0;
+    background-clip: padding-box;
+  }
 }
 
 /* Signature spectrum gradient utilities (plain classes, always emitted). */
