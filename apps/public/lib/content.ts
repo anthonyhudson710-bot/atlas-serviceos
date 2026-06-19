@@ -189,3 +189,120 @@ export const pricing = {
     },
   ],
 } as const;
+
+/* ───────────────────────── Homepage marketing sections ─────────────────────
+   Original, conversion-focused copy for the full home page. Honest about
+   pre-launch status — no fabricated usage counts or named testimonials. The
+   "switch" comparison contrasts Atlas with legacy field-service tools as a
+   category (not any single competitor by name). */
+
+/** Hero CTA labels + supporting trust line. */
+export const heroCta = {
+  primary: "Get early access",
+  secondary: "See pricing",
+  reassure: "Free plan forever · Founding pricing for early members · No credit card",
+} as const;
+
+/** The platform at a glance — one place for the whole job lifecycle. */
+export const platform = {
+  eyebrow: "One platform",
+  title: "Everything your service business runs on, ",
+  titleHighlight: "in one place.",
+  subtitle:
+    "Stop stitching together a calendar app, a spreadsheet, a payment link, and three group chats. Atlas connects the whole job — from first call to final payment.",
+  features: [
+    {
+      icon: "CalendarCheck",
+      title: "Scheduling & dispatch",
+      body: "A drag-and-drop calendar and live dispatch board your whole crew sees in real time. Assign work, balance routes, and fill gaps in seconds.",
+    },
+    {
+      icon: "FileText",
+      title: "Quotes & estimates",
+      body: "Send polished, branded quotes from the driveway. Clients approve online, and approved work flows straight onto the schedule.",
+    },
+    {
+      icon: "CreditCard",
+      title: "Invoicing & payments",
+      body: "Turn finished jobs into invoices in a tap and collect by card, bank, or in person. Automatic follow-ups chase down what you're owed.",
+    },
+    {
+      icon: "AddressBook",
+      title: "Client CRM",
+      body: "Every client's full history — quotes, jobs, photos, notes, and messages — in one tidy record your whole team can pull up on site.",
+    },
+    {
+      icon: "DeviceMobile",
+      title: "Mobile, built for the field",
+      body: "A fast app designed to keep working when the signal doesn't. Your techs stay productive in the basement, the boonies, and the dead zones.",
+    },
+    {
+      icon: "Lightning",
+      title: "Automations",
+      body: "Appointment reminders, on-my-way texts, review requests, and follow-ups run themselves — so fewer no-shows and more five-star reviews.",
+    },
+  ],
+} as const;
+
+/** From first call to final payment — the lifecycle stepper. */
+export const workflow = {
+  eyebrow: "How the work flows",
+  title: "From first call to ",
+  titleHighlight: "money in the bank.",
+  steps: [
+    { icon: "ChatCircleText", title: "Request comes in", body: "Online booking and a request form capture new work day or night." },
+    { icon: "FileText", title: "Quote it", body: "Build and send a branded quote in minutes; clients approve in a click." },
+    { icon: "CalendarCheck", title: "Schedule & dispatch", body: "Drop the job on the calendar and route the right tech to it." },
+    { icon: "Wrench", title: "Do the work", body: "Crews get details, checklists, and directions on the mobile app." },
+    { icon: "Receipt", title: "Invoice", body: "Convert the completed job into an invoice without re-typing a thing." },
+    { icon: "CheckCircle", title: "Get paid", body: "Collect by card or bank; automated reminders handle the stragglers." },
+  ],
+} as const;
+
+/** Why teams switch — Atlas vs legacy field-service tools. */
+export const comparison = {
+  eyebrow: "Why teams switch",
+  title: "Made to move you off ",
+  titleHighlight: "clunky, overpriced tools.",
+  subtitle:
+    "If your current software feels like it was built for a 50-truck enterprise and priced like it too, you're our people.",
+  columns: { atlas: "Atlas", legacy: "Legacy tools" },
+  rows: [
+    { label: "Pricing", atlas: "Transparent and published — founding rates locked in", legacy: "“Contact sales” black boxes and surprise renewals" },
+    { label: "Seats", atlas: "Fair — unlimited office seats on team plans", legacy: "Charged per user until it hurts" },
+    { label: "Setup", atlas: "Up and running in an afternoon", legacy: "Weeks of onboarding calls" },
+    { label: "In the field", atlas: "Offline-first, built for spotty signal", legacy: "Freezes the moment you lose a bar" },
+    { label: "Experience", atlas: "Fast, modern, genuinely pleasant to use", legacy: "Dated, cluttered, slow" },
+    { label: "Switching", atlas: "Free, guided migration of your clients & history", legacy: "Export a CSV and good luck" },
+  ],
+} as const;
+
+/** Outcome band — what the platform is designed to do (no fabricated stats). */
+export const outcomes = {
+  title: "Built to help you ",
+  titleHighlight: "win, work, and earn more.",
+  items: [
+    { icon: "Trophy", title: "Win more work", body: "Fast quotes, online booking, and automatic follow-up so fewer leads slip away." },
+    { icon: "ClockCounterClockwise", title: "Save hours every week", body: "Scheduling, invoicing, and reminders that run on autopilot instead of on your evenings." },
+    { icon: "Money", title: "Get paid faster", body: "One-tap invoices, card and bank payments, and reminders that collect what you're owed." },
+  ],
+} as const;
+
+/** Trades Atlas is built for (who it's FOR — honest, not a customer list). */
+export const industries = {
+  eyebrow: "Built for the trades",
+  title: "Made for the work you do.",
+  subtitle: "Atlas fits the way real service businesses run — pick your trade and feel right at home.",
+  items: [
+    { icon: "Snowflake", name: "HVAC" },
+    { icon: "Drop", name: "Plumbing" },
+    { icon: "Lightning", name: "Electrical" },
+    { icon: "Plant", name: "Landscaping" },
+    { icon: "Leaf", name: "Lawn Care" },
+    { icon: "Broom", name: "Cleaning" },
+    { icon: "Bug", name: "Pest Control" },
+    { icon: "Hammer", name: "Handyman" },
+    { icon: "HouseLine", name: "Roofing" },
+    { icon: "PaintRoller", name: "Painting" },
+  ],
+} as const;
