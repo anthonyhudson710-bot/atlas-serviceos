@@ -15,7 +15,7 @@ import { hero, pillars, why, howItWorks, faqs, finalCta } from "@/lib/content";
 const TRADES = ["HVAC", "Plumbing", "Electrical", "Landscaping", "Cleaning"];
 
 function PillarIcon({ name }: { name: string }) {
-  const cls = "size-6 text-brand";
+  const cls = "size-6 text-signal";
   switch (name) {
     case "CalendarCheck":
       return <CalendarCheck weight="bold" className={cls} aria-hidden="true" />;
@@ -37,21 +37,20 @@ export default function Home() {
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
-        {/* Decorative brand wash — aria-hidden, pointer-events-none. */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[480px] bg-gradient-to-b from-surface to-background"
         />
         <Container className="pt-20 pb-16 sm:pt-28 sm:pb-24">
           <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-muted">
-              <span className="size-1.5 rounded-full bg-brand" aria-hidden="true" />
+            <span className="text-spectrum text-sm font-extrabold uppercase tracking-wide">
               {hero.eyebrow}
             </span>
-            <h1 className="mt-6 text-balance text-4xl font-semibold tracking-tight text-foreground sm:text-5xl md:text-6xl">
+            <h1 className="mt-5 text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
               {hero.title}
+              <span className="text-brand">{hero.titleHighlight}</span>
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-8 text-muted">
+            <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-muted">
               {hero.subtitle}
             </p>
 
@@ -59,11 +58,11 @@ export default function Home() {
               <WaitlistForm id="waitlist" />
             </div>
 
-            <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted">
-              <li className="font-medium text-foreground">Built for:</li>
+            <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-2">
+              <li className="font-semibold text-foreground">Built for:</li>
               {TRADES.map((t) => (
                 <li key={t} className="flex items-center gap-2">
-                  <span className="size-1 rounded-full bg-muted" aria-hidden="true" />
+                  <span className="size-1 rounded-full bg-muted-2" aria-hidden="true" />
                   {t}
                 </li>
               ))}
@@ -78,9 +77,10 @@ export default function Home() {
           <div className="mx-auto max-w-2xl text-center">
             <h2
               id="what-heading"
-              className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
+              className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
             >
-              One platform, from the first call to getting paid.
+              One platform, from the first call to{" "}
+              <span className="text-brand">getting paid</span>.
             </h2>
             <p className="mt-4 text-lg text-muted">
               Everything a growing trade business runs on — without juggling five
@@ -92,12 +92,12 @@ export default function Home() {
             {pillars.map((p) => (
               <li
                 key={p.title}
-                className="rounded-2xl border border-border bg-background p-6 shadow-card"
+                className="rounded-card border border-border bg-background p-6 shadow-card"
               >
-                <span className="grid size-12 place-items-center rounded-xl bg-surface-2">
+                <span className="grid size-12 place-items-center rounded-card bg-surface-2">
                   <PillarIcon name={p.icon} />
                 </span>
-                <h3 className="mt-5 text-lg font-semibold text-foreground">{p.title}</h3>
+                <h3 className="mt-5 text-lg font-bold text-foreground">{p.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted">{p.body}</p>
               </li>
             ))}
@@ -112,20 +112,20 @@ export default function Home() {
             <div>
               <h2
                 id="why-heading"
-                className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
+                className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
               >
-                {why.title}
+                The trades deserve <span className="text-brand">better tools</span>.
               </h2>
               {why.body.map((para) => (
-                <p key={para.slice(0, 24)} className="mt-5 text-lg leading-8 text-muted">
+                <p key={para.slice(0, 24)} className="mt-5 text-lg leading-relaxed text-muted">
                   {para}
                 </p>
               ))}
-              <p className="mt-6 font-medium text-foreground">{why.signature}</p>
+              <p className="mt-6 font-semibold text-foreground">{why.signature}</p>
             </div>
 
-            <div className="rounded-3xl border border-border bg-surface p-8 shadow-card">
-              <p className="text-xl font-medium leading-9 text-foreground text-balance">
+            <div className="rounded-card border border-border bg-surface p-8 shadow-card">
+              <p className="text-balance text-xl font-medium leading-relaxed text-foreground">
                 “The right tool should pay for itself in the first week — not take a
                 week just to set up.”
               </p>
@@ -144,7 +144,7 @@ export default function Home() {
           <div className="mx-auto max-w-2xl text-center">
             <h2
               id="how-heading"
-              className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
+              className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
             >
               {howItWorks.title}
             </h2>
@@ -152,10 +152,8 @@ export default function Home() {
           <ol className="mx-auto mt-14 grid max-w-4xl gap-8 sm:grid-cols-3">
             {howItWorks.steps.map((s) => (
               <li key={s.step}>
-                <span className="font-mono text-sm font-semibold text-brand-strong">
-                  {s.step}
-                </span>
-                <h3 className="mt-3 text-lg font-semibold text-foreground">{s.title}</h3>
+                <span className="text-spectrum text-base font-extrabold">{s.step}</span>
+                <h3 className="mt-3 text-lg font-bold text-foreground">{s.title}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted">{s.body}</p>
               </li>
             ))}
@@ -169,18 +167,18 @@ export default function Home() {
           <div className="mx-auto max-w-3xl">
             <h2
               id="faq-heading"
-              className="text-center text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
+              className="text-center text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
             >
-              Questions, answered.
+              Questions, <span className="text-brand">answered</span>.
             </h2>
             <div className="mt-12 divide-y divide-border border-y border-border">
               {faqs.map((f) => (
                 <details key={f.q} className="group py-5">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-left text-lg font-medium text-foreground [&::-webkit-details-marker]:hidden">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-left text-lg font-semibold text-foreground [&::-webkit-details-marker]:hidden">
                     {f.q}
                     <Plus
                       size={20}
-                      className="shrink-0 text-muted transition-transform group-open:rotate-45"
+                      className="shrink-0 text-muted-2 transition-transform group-open:rotate-45"
                       aria-hidden="true"
                     />
                   </summary>
@@ -195,16 +193,19 @@ export default function Home() {
       {/* ── Final CTA ────────────────────────────────────────────────────── */}
       <Section surface labelledby="cta-heading">
         <Container>
-          <div className="mx-auto max-w-2xl rounded-3xl border border-border bg-background p-10 text-center shadow-card sm:p-14">
-            <h2
-              id="cta-heading"
-              className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
-            >
-              {finalCta.title}
-            </h2>
-            <p className="mx-auto mt-4 max-w-lg text-lg text-muted">{finalCta.subtitle}</p>
-            <div className="mx-auto mt-8 max-w-xl">
-              <WaitlistForm id="waitlist-bottom" />
+          <div className="mx-auto max-w-2xl overflow-hidden rounded-card border border-border bg-background text-center shadow-card">
+            <div className="h-1.5 bg-spectrum" aria-hidden="true" />
+            <div className="p-10 sm:p-14">
+              <h2
+                id="cta-heading"
+                className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
+              >
+                Be <span className="text-brand">first in line</span>.
+              </h2>
+              <p className="mx-auto mt-4 max-w-lg text-lg text-muted">{finalCta.subtitle}</p>
+              <div className="mx-auto mt-8 max-w-xl">
+                <WaitlistForm id="waitlist-bottom" />
+              </div>
             </div>
           </div>
         </Container>

@@ -12,7 +12,9 @@
 
 export const hero = {
   eyebrow: "Now onboarding early access",
-  title: "Field service software that respects your time — and your margins.",
+  // Split so the payoff phrase can be color-highlighted (evermore §5.4).
+  title: "Field service software that respects your time — and ",
+  titleHighlight: "your margins.",
   subtitle:
     "Atlas brings scheduling, dispatch, estimates, invoicing, and payments into one place built for growing trade businesses — without the enterprise price tag or the week-long setup.",
   formMicrocopy: "Join the early-access list. No spam — just an invite when your spot opens.",

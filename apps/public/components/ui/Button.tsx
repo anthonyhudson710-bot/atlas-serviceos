@@ -3,20 +3,16 @@ import type { ReactNode } from "react";
 
 type Variant = "primary" | "secondary";
 
+// Pill control (evermore signature): Midnight base → Signal hover, weight 700.
 const base =
-  "inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+  "inline-flex h-11 items-center justify-center gap-2 rounded-full px-7 text-base font-bold transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-brand text-brand-foreground hover:bg-brand-strong",
-  secondary:
-    "border border-border bg-background text-foreground hover:bg-surface-2",
+  primary: "bg-action text-white hover:bg-action-hover",
+  // evermore "white" variant: white base → Midnight on hover.
+  secondary: "border border-line bg-white text-action hover:bg-action hover:text-white",
 };
 
-/**
- * Link styled as a button — the only CTA control on a link-driven page.
- * Uses next/link so internal routes get client navigation + prefetch; it
- * renders a plain anchor for hash/external/mailto hrefs too.
- */
 export function ButtonLink({
   href,
   variant = "primary",

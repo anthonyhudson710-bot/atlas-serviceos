@@ -16,12 +16,24 @@ export default function OgImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#0a0f1c",
+          background: "#0b2370", // Midnight
           padding: "80px",
           fontFamily: "sans-serif",
-          color: "#e7eef8",
+          color: "#ffffff",
         }}
       >
+        {/* Spectrum accent bar (45°) */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "12px",
+            backgroundImage:
+              "linear-gradient(45deg,#0b2370 0%,#1133aa 19.96%,#0068dc 39.93%,#00b2b1 59.89%,#2bbe60 79.85%,#a8e41b 100%)",
+          }}
+        />
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
           <div
             style={{
@@ -29,7 +41,8 @@ export default function OgImage() {
               width: "64px",
               height: "64px",
               borderRadius: "16px",
-              background: "#2563eb",
+              backgroundImage:
+                "linear-gradient(45deg,#0068dc 0%,#00b2b1 50%,#2bbe60 100%)",
               alignItems: "center",
               justifyContent: "center",
               fontSize: "40px",
@@ -46,13 +59,13 @@ export default function OgImage() {
           <div style={{ display: "flex", fontSize: "62px", fontWeight: 700, lineHeight: 1.1, maxWidth: "960px" }}>
             Field service software that respects your time — and your margins.
           </div>
-          <div style={{ display: "flex", fontSize: "28px", color: "#9fb0c6", maxWidth: "860px" }}>
+          <div style={{ display: "flex", fontSize: "28px", color: "#c7cdf0", maxWidth: "860px" }}>
             Schedule, dispatch, invoice, and get paid — built for growing trade businesses.
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", fontSize: "24px", color: "#9fb0c6" }}>
-          <div style={{ display: "flex", padding: "10px 20px", borderRadius: "999px", border: "1px solid #21314b" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px", fontSize: "24px", color: "#c7cdf0" }}>
+          <div style={{ display: "flex", padding: "10px 20px", borderRadius: "999px", border: "1px solid rgba(255,255,255,0.25)" }}>
             Now onboarding early access
           </div>
           <div style={{ display: "flex" }}>www.atlasfsm.com</div>

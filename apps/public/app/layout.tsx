@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Figtree } from "next/font/google";
 import Script from "next/script";
+import { AnnouncementBar } from "@/components/AnnouncementBar";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { JsonLd } from "@/components/JsonLd";
@@ -8,8 +9,9 @@ import { organizationSchema, softwareSchema } from "@/lib/schema";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+// evermore's single typeface, variable weight axis. ss01 + tracking are set
+// globally in globals.css.
+const figtree = Figtree({ variable: "--font-figtree", subsets: ["latin"] });
 
 const titleDefault = `${siteConfig.name} — ${siteConfig.tagline}`;
 
@@ -57,14 +59,11 @@ const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${figtree.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-brand focus:px-4 focus:py-2 focus:font-semibold focus:text-brand-foreground"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-action focus:px-4 focus:py-2 focus:font-semibold focus:text-white"
         >
           Skip to content
         </a>
@@ -72,6 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <JsonLd data={organizationSchema()} />
         <JsonLd data={softwareSchema()} />
 
+        <AnnouncementBar />
         <Header />
         <main id="main" className="flex-1">
           {children}

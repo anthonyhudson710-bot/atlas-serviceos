@@ -1,72 +1,131 @@
 @import "tailwindcss";
 
-/* ── Design tokens ─────────────────────────────────────────────────────────
-   Light-only palette, mapped into Tailwind's @theme below so utilities
-   (bg-surface, text-muted, bg-brand, …) resolve to these vars. All
-   text/background pairings target WCAG 2.2 AA (≥4.5:1 body, ≥3:1 large).
-   Dark mode is intentionally NOT supported on the marketing site — color-scheme
-   is pinned to light so native UI never renders dark either. */
+/* ── evermore design tokens (light-only) ───────────────────────────────────
+   Re-skin of the Atlas FSM marketing site using the evermore brand system.
+   Hex values transcribed from the evermore brand doc; token names are ours.
+   Body text defaults to Slate; headings to Ink. No dark mode (color-scheme
+   pinned to light). */
 :root {
   color-scheme: light;
+
+  /* Spectrum (brand primitives) */
+  --midnight: #0b2370;
+  --royal: #1133aa;
+  --signal: #0068dc; /* primary accent / link */
+  --teal: #00b2b1;
+  --verdant: #2bbe60;
+  --lime: #a8e41b;
+
+  /* Neutrals */
+  --ink: #0c0c0d;
+  --slate: #414658; /* body text */
+  --steel: #5c6070;
+  --periwinkle: #7085cc;
+  --deep-navy: #091c5a;
+  --line: #dadbe0;
+  --mist: #ecedf1;
+  --cloud: #f2f2f3;
+  --field: #f7f7f7;
+
+  /* Semantic */
   --background: #ffffff;
-  --surface: #f8fafc;
-  --surface-2: #f1f5f9;
-  --foreground: #0b1220;
-  --muted: #475569; /* 7.5:1 on white */
-  --border: #e2e8f0;
-  --brand: #2563eb;
-  --brand-strong: #1d4ed8; /* link/text on light → 5.2:1 */
-  --brand-foreground: #ffffff;
-  --accent: #b45309; /* amber-700, AA as text on light */
-  --ring: #2563eb;
-  --success: #15803d;
-  --warning: #b45309;
+  --surface: var(--field);
+  --surface-2: var(--cloud);
+  --foreground: var(--ink);
+  --muted: var(--slate);
+  --muted-2: var(--steel);
+  --border: var(--line);
+  --border-subtle: var(--mist);
+  --action: var(--midnight); /* primary button base */
+  --action-hover: var(--signal); /* primary button hover */
+  --brand: var(--signal); /* accent, links, keyword highlights */
+  --ring: var(--signal);
+  --success: var(--verdant);
   --error: #dc2626;
+
+  /* Signature gradient — 45°, six stops, source offsets preserved. */
+  --gradient-spectrum: linear-gradient(
+    45deg,
+    #0b2370 0%,
+    #1133aa 19.96%,
+    #0068dc 39.93%,
+    #00b2b1 59.89%,
+    #2bbe60 79.85%,
+    #a8e41b 100%
+  );
 }
 
 @theme inline {
+  /* Spectrum */
+  --color-midnight: var(--midnight);
+  --color-royal: var(--royal);
+  --color-signal: var(--signal);
+  --color-teal: var(--teal);
+  --color-verdant: var(--verdant);
+  --color-lime: var(--lime);
+  /* Neutrals */
+  --color-ink: var(--ink);
+  --color-slate: var(--slate);
+  --color-steel: var(--steel);
+  --color-periwinkle: var(--periwinkle);
+  --color-deep-navy: var(--deep-navy);
+  --color-line: var(--line);
+  --color-mist: var(--mist);
+  --color-cloud: var(--cloud);
+  --color-field: var(--field);
+  /* Semantic */
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
   --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
   --color-brand: var(--brand);
-  --color-brand-strong: var(--brand-strong);
-  --color-brand-foreground: var(--brand-foreground);
-  --color-accent: var(--accent);
   --color-ring: var(--ring);
   --color-success: var(--success);
-  --color-warning: var(--warning);
   --color-error: var(--error);
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans: var(--font-figtree), "Helvetica Neue", Helvetica, Inter, Arial, sans-serif;
 
-  /* A single soft elevation token keeps cards consistent. */
-  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px -12px rgb(15 23 42 / 0.12);
+  /* Cards are gently rounded (5px); buttons/inputs handle their own radii. */
+  --radius-card: 5px;
+
+  /* Tinted, layered elevation — never plain black (evermore §8). */
+  --shadow-card: 0 1px 5px rgb(85 124 176 / 0.03), 0 4px 18px rgb(85 124 176 / 0.04),
+    0 17px 80px rgb(85 124 176 / 0.07);
+  --shadow-overlay: 0 8px 24px rgb(43 47 59 / 0.17);
 }
 
-/* ── Base layer ────────────────────────────────────────────────────────── */
 @layer base {
   html {
     scroll-behavior: smooth;
-    /* Account for the sticky header when jumping to in-page anchors. */
-    scroll-padding-top: 5rem;
+    scroll-padding-top: 6rem;
   }
-
   body {
     background: var(--background);
-    color: var(--foreground);
+    color: var(--muted); /* default body = Slate */
+    font-feature-settings: "ss01" on; /* evermore stylistic set */
+    letter-spacing: -0.01em; /* global tightening */
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
-
-  ::selection {
-    background: color-mix(in oklab, var(--brand) 25%, transparent);
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--foreground);
+    text-wrap: balance;
   }
-
-  /* Visible, consistent keyboard focus everywhere (a11y). */
+  ::selection {
+    background: color-mix(in oklab, var(--signal) 22%, transparent);
+  }
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
@@ -74,7 +133,18 @@
   }
 }
 
-/* Respect users who ask for less motion (a11y / CWV). */
+/* Signature spectrum gradient utilities (plain classes, always emitted). */
+.bg-spectrum {
+  background-image: var(--gradient-spectrum);
+}
+.text-spectrum {
+  background-image: var(--gradient-spectrum);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

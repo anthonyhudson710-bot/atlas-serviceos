@@ -80,7 +80,7 @@ export function WaitlistForm({ id, className = "" }: { id?: string; className?: 
           inputMode="email"
           placeholder="you@yourbusiness.com"
           aria-invalid={status === "error"}
-          className="h-12 w-full flex-1 rounded-full border border-border bg-background px-5 text-base text-foreground placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          className="h-12 w-full flex-1 rounded-none border border-line bg-field px-4 text-base text-foreground placeholder:text-muted focus:border-steel focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         />
 
         {/* Honeypot: hidden from people, irresistible to bots. */}
@@ -98,7 +98,7 @@ export function WaitlistForm({ id, className = "" }: { id?: string; className?: 
         <button
           type="submit"
           disabled={status === "submitting"}
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-brand px-6 text-base font-semibold text-brand-foreground transition-colors hover:bg-brand-strong disabled:opacity-70"
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-action px-7 text-base font-bold text-white transition-colors duration-300 hover:bg-action-hover disabled:opacity-70"
         >
           {status === "submitting" ? (
             <>
