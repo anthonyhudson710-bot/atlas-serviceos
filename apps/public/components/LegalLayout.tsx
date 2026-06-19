@@ -16,7 +16,7 @@ export function LegalLayout({
   children: ReactNode;
 }) {
   return (
-    <Container className="max-w-3xl py-20">
+    <Container className="max-w-3xl pt-10 pb-20">
       <h1 className="text-4xl font-semibold tracking-tight text-foreground">{title}</h1>
       <p className="mt-3 text-sm text-muted">Last updated: {lastUpdated}</p>
 

@@ -41,7 +41,7 @@ export default function Home() {
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[480px] bg-gradient-to-b from-surface to-background"
         />
-        <Container className="pt-20 pb-16 sm:pt-28 sm:pb-24">
+        <Container className="pt-10 pb-16 sm:pt-12 sm:pb-24">
           <div className="mx-auto max-w-3xl text-center">
             <span className="text-spectrum text-sm font-extrabold uppercase tracking-wide">
               {hero.eyebrow}

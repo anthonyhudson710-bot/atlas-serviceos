@@ -107,58 +107,84 @@ export const finalCta = {
 } as const;
 
 /**
- * Pricing — transparent tiers are a core differentiator (§1). Atlas is
- * pre-launch, so these are indicative FOUNDING prices being finalized during
- * early access; the on-page banner says so. Edit numbers/features here.
+ * Pricing — a growth ladder where every upgrade is triggered by a win, not a
+ * wall (Free→Starter = "I got paying clients"; Starter→Crew = "I hired
+ * someone"; Crew→Fleet = "I'm running multiple trucks"). Transparent pricing is
+ * a core differentiator (§1). Atlas is pre-launch, so these are indicative
+ * FOUNDING prices being finalized during early access; the banner says so.
+ * Edit names/prices/features/caps here.
  */
 export const pricing = {
   eyebrow: "Pricing",
-  title: "Simple, transparent pricing. ",
+  title: "Pricing that grows when you do. ",
   titleHighlight: "No surprises.",
   subtitle:
-    "Plans you can read right here — no “contact sales to find out what it costs.” Early-access members lock in founding rates for life.",
-  note: "These are indicative founding prices while Atlas is in early access. Final plans are confirmed at launch — join the list to lock in founding rates.",
+    "Start free, upgrade only when your business hits the next milestone — never because we nagged you. Plans you can read right here, no “contact sales to find out what it costs.”",
   tiers: [
+    {
+      name: "Solo",
+      price: "Free",
+      period: "",
+      blurb: "Enough to run a side gig.",
+      featured: false,
+      cta: "Get early access",
+      ctaHref: "#waitlist",
+      features: [
+        "1 user",
+        "Scheduling & basic CRM",
+        "Manual invoicing",
+        "Up to 20 active clients",
+        "“Powered by Atlas” on documents",
+      ],
+    },
     {
       name: "Starter",
       price: "$29",
       period: "/mo",
-      blurb: "For solo operators getting organized.",
+      blurb: "I'm a real business now.",
       featured: false,
+      cta: "Get early access",
+      ctaHref: "#waitlist",
       features: [
-        "Scheduling & dispatch",
-        "Estimates & invoicing",
-        "Mobile app for the field",
-        "Up to 2 users",
-        "Email support",
+        "Everything in Solo, plus:",
+        "Unlimited clients & jobs",
+        "Integrated payments",
+        "Online booking",
+        "Automated reminders",
+        "No Atlas branding",
       ],
     },
     {
-      name: "Pro",
+      name: "Crew",
       price: "$79",
       period: "/mo",
-      blurb: "For growing teams that live in the field.",
+      blurb: "You hired someone.",
       featured: true,
+      cta: "Get early access",
+      ctaHref: "#waitlist",
       features: [
-        "Everything in Starter",
-        "Card & bank payments",
-        "Customer CRM & history",
-        "Up to 10 users",
-        "Priority support",
+        "Everything in Starter, plus:",
+        "Unlimited office seats + up to ~10 field",
+        "QuickBooks sync",
+        "Dispatch board",
+        "Full automations",
+        "Time tracking",
       ],
     },
     {
-      name: "Business",
+      name: "Fleet",
       price: "$149",
       period: "/mo",
-      blurb: "For established shops scaling up.",
+      blurb: "You're running multiple trucks.",
       featured: false,
+      cta: "Get early access",
+      ctaHref: "#waitlist",
       features: [
-        "Everything in Pro",
+        "Everything in Crew, plus:",
+        "Route optimization",
         "Advanced reporting",
-        "Custom workflows",
-        "Unlimited users",
-        "Dedicated onboarding",
+        "Role-based permissions",
+        "API access",
       ],
     },
   ],
