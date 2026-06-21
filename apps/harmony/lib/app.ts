@@ -107,4 +107,15 @@ export const account = {
   ],
 } as const;
 
+/**
+ * Quick-create actions for the Topbar "+" menu. Disabled until the create flows
+ * exist; drop `disabled` (and add the route) as each lands.
+ */
+export const quickAdd: readonly NavLeaf[] = [
+  { href: "/jobs/new", label: "New job", disabled: true },
+  { href: "/jobs/estimates/new", label: "New estimate", disabled: true },
+  { href: "/customers/new", label: "New customer", disabled: true },
+  { href: "/invoices/new", label: "New invoice", disabled: true },
+] as const;
+
 export type AppConfig = typeof appConfig;

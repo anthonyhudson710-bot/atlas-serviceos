@@ -1,6 +1,7 @@
-import { MagnifyingGlass, Bell, Plus } from "@phosphor-icons/react/dist/ssr";
-import { Button } from "@/components/ui/Button";
+import { MagnifyingGlass, Bell } from "@phosphor-icons/react/dist/ssr";
 import { MobileMenuButton } from "@/components/app-shell/MobileMenuButton";
+import { QuickAddMenu } from "@/components/app-shell/QuickAddMenu";
+import { ProfileMenu } from "@/components/app-shell/ProfileMenu";
 
 /**
  * Light workspace header that sits above scrolling content. Holds the mobile
@@ -29,6 +30,8 @@ export function Topbar() {
       </form>
 
       <div className="ml-auto flex items-center gap-1.5">
+        <QuickAddMenu />
+
         <button
           type="button"
           aria-label="Notifications"
@@ -41,10 +44,10 @@ export function Topbar() {
           />
         </button>
 
-        <Button size="sm" className="hidden sm:inline-flex">
-          <Plus size={16} weight="bold" aria-hidden="true" />
-          New
-        </Button>
+        {/* Profile lives in the desktop rail; surface it in the header on mobile. */}
+        <div className="lg:hidden">
+          <ProfileMenu />
+        </div>
       </div>
     </header>
   );
