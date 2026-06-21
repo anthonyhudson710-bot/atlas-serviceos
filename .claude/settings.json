@@ -26,7 +26,16 @@
       "WebFetch(domain:api.github.com)",
       "Bash(gh variable *)",
       "Bash(node -e \"const S=require\\('@sentry/node'\\); S.init\\({dsn:'https://a9d50b64b204aa8d8fefa26647edc714@o4511600165388288.ingest.us.sentry.io/4511600174694400', environment:'development', tracesSampleRate:0}\\); const id=S.captureException\\(new Error\\('harmony — dev environment isolation check'\\)\\); console.log\\('event id:', id\\); S.flush\\(8000\\).then\\(ok=>{console.log\\('flushed:', ok\\); process.exit\\(ok?0:1\\)}\\);\")",
-      "Bash(git switch *)"
+      "Bash(git switch *)",
+      "Bash(grep -iE \"node_modules|/\\\\.next/|\\\\.env$|sentry-verify|\\\\.output$\")",
+      "Bash(git --no-pager log --oneline -1)",
+      "Bash(grep -E 'sentry-test|ALL GREEN' __TRACKED_VAR__/b3hf9t13s.output)",
+      "Bash(grep -E 'sentry-test|ALL GREEN' __TRACKED_VAR__/b49oal770.output)",
+      "Bash(grep -E 'ALL GREEN' __TRACKED_VAR__/b8so71d2d.output)",
+      "Bash(grep -E 'ALL GREEN' __TRACKED_VAR__/b7vew2fz7.output)",
+      "Bash(grep -iE \"node_modules|/dist/|/\\\\.next/|\\\\.env\\\\.secrets$|\\\\.output$\")",
+      "Bash(openssl rand *)",
+      "Bash(git --no-pager log --oneline -3)"
     ]
   }
 }

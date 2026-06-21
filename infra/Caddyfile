@@ -28,6 +28,19 @@ app.{$DOMAIN} {
 	reverse_proxy app:3000
 }
 
+# Shared backend — the API the three UIs consume (apps/api).
+api.{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy api:3000
+}
+
+# Shared login / IAM — same apps/api service; issues the .{$DOMAIN} session
+# cookie so a single sign-in covers both app. and harmony.
+iam.{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy api:3000
+}
+
 # ── Future apps (separate codebases) attach here as subdomains. To add one:
 #   1. add its service to docker-compose.yml (e.g. `foo`, expose 3000)
 #   2. add a site block like `app.{$DOMAIN}` above (reverse_proxy foo:3000)

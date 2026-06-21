@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [public, harmony, app]
+        app: [public, harmony, app, api]
     defaults:
       run:
         working-directory: apps/${{ matrix.app }}

@@ -22,6 +22,7 @@ services:
       - public
       - harmony
       - app
+      - api
 
   public:
     image: ghcr.io/anthonyhudson710-bot/atlas-serviceos/public:${IMAGE_TAG:-latest}
@@ -67,7 +68,51 @@ services:
     expose:
       - "3000" # internal only; Caddy is the public entrypoint
 
+  # Shared backend (apps/api) at api.atlasfsm.com + shared login at
+  # iam.atlasfsm.com. Secrets (POSTGRES_PASSWORD, JWT_SECRET) come from
+  # ./.env.secrets — see infra/.env.secrets.example. That file is gitignored and
+  # must exist next to this compose file (locally and on the server).
+  api:
+    image: ghcr.io/anthonyhudson710-bot/atlas-serviceos/api:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file:
+      - .env.secrets
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER:-atlas}
+      POSTGRES_DB: ${POSTGRES_DB:-atlas}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-.atlasfsm.com}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://app.atlasfsm.com,https://harmony.atlasfsm.com}
+      # SENTRY_DSN defaults to the committed serviceos-api DSN in instrument.ts.
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "3000" # internal only; Caddy is the public entrypoint
+
+  # User store for the API's custom auth. POSTGRES_PASSWORD comes from .env.secrets.
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - .env.secrets
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-atlas}
+      POSTGRES_DB: ${POSTGRES_DB:-atlas}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-atlas} -d ${POSTGRES_DB:-atlas}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   caddy_data:
   caddy_config:
   waitlist_data:
+  pg_data:

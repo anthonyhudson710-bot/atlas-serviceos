@@ -24,6 +24,8 @@ coverage/
 *.pem
 # ...except infra/.env, which holds only non-secret prod config (DOMAIN, ACME_EMAIL).
 !infra/.env
+# API/Postgres secrets loaded by compose env_file — never commit (use the .example).
+infra/.env.secrets
 
 # Logs
 *-debug.log*

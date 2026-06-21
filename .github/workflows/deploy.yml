@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [public, harmony, app]
+        app: [public, harmony, app, api]
     defaults:
       run:
         working-directory: apps/${{ matrix.app }}
@@ -47,7 +47,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [public, harmony, app]
+        app: [public, harmony, app, api]
     steps:
       # Production must ship readable stack traces. Fail fast (before building or
       # pushing anything) if the Sentry source-map credentials are missing, so a
@@ -114,8 +114,14 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
           IMAGE_TAG: ${{ github.sha }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           set -euo pipefail
+          # api + postgres need these at runtime; fail before touching the server
+          # rather than boot a stack with no DB password / unsigned sessions.
+          : "${POSTGRES_PASSWORD:?missing repo secret POSTGRES_PASSWORD}"
+          : "${JWT_SECRET:?missing repo secret JWT_SECRET}"
           mkdir -p ~/.ssh
           # Write the key stripping any CR (CRLF paste) and forcing a trailing
           # newline — both are common causes of "error in libcrypto".
@@ -132,6 +138,11 @@ jobs:
           scp $SSH_OPTS \
             infra/docker-compose.yml infra/Caddyfile infra/.env \
             "$SSH_USER@$SSH_HOST:~/atlas-serviceos/"
+
+          # Write the compose secrets file (api + postgres) via stdin so the
+          # values never appear in a process listing on the server.
+          printf 'POSTGRES_PASSWORD=%s\nJWT_SECRET=%s\n' "$POSTGRES_PASSWORD" "$JWT_SECRET" \
+            | ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" "umask 077 && cat > ~/atlas-serviceos/.env.secrets"
 
           # Pull the images we just built and roll the stack forward to this SHA.
           ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" \
