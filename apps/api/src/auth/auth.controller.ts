@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   Post,
   Req,
@@ -25,6 +26,12 @@ export class AuthController {
     @Body() dto: CredentialsDto,
     @Res({ passthrough: true }) res: Response,
   ) {
+    // Public self-registration is disabled — accounts are created by admins via
+    // the invite flow. ALLOW_OPEN_REGISTRATION=true is a temporary bootstrap escape
+    // hatch only (e.g. to create the very first admin).
+    if (process.env.ALLOW_OPEN_REGISTRATION !== "true") {
+      throw new ForbiddenException("Public registration is disabled");
+    }
     const { token, user } = await this.auth.register(dto.email, dto.password);
     res.cookie(SESSION_COOKIE, token, sessionCookieOptions());
     return { user };

@@ -58,28 +58,19 @@ const LOGIN_HTML = `<!doctype html>
     <label for="password">Password</label>
     <input id="password" name="password" type="password" autocomplete="current-password" required minlength="8" />
     <button type="submit">Sign in</button>
-    <p class="row"><a href="#" id="toggle">Create an account instead</a></p>
+    <p class="row">Access is invite-only — contact your administrator.</p>
     <p class="msg" id="msg"></p>
   </form>
 <script>
   const f = document.getElementById("f");
   const msg = document.getElementById("msg");
   const params = new URLSearchParams(location.search);
-  let mode = params.get("mode") === "register" ? "register" : "login";
-  const toggle = document.getElementById("toggle");
-  const btn = f.querySelector("button");
-  function render() {
-    btn.textContent = mode === "register" ? "Create account" : "Sign in";
-    toggle.textContent = mode === "register" ? "Have an account? Sign in" : "Create an account instead";
-  }
-  render();
-  toggle.addEventListener("click", (e) => { e.preventDefault(); mode = mode === "register" ? "login" : "register"; render(); });
   f.addEventListener("submit", async (e) => {
     e.preventDefault();
     msg.textContent = "";
     const body = JSON.stringify({ email: f.email.value, password: f.password.value });
     try {
-      const res = await fetch("/auth/" + mode, {
+      const res = await fetch("/auth/login", {
         method: "POST", credentials: "include",
         headers: { "content-type": "application/json" }, body,
       });
