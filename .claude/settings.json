@@ -20,7 +20,13 @@
       "Bash(curl -sS -m 12 -o /dev/null -w \"http://74.208.191.114 → HTTP %{http_code}\\\\n\" http://74.208.191.114)",
       "Bash(curl -sS -m 15 -o /dev/null -w \"https://www.atlasfsm.com → HTTP %{http_code} \\(cert: %{ssl_verify_result}\\)\\\\n\" https://www.atlasfsm.com)",
       "Bash(curl -sS -m 15 -o /dev/null -w \"https://atlasfsm.com → HTTP %{http_code}\\\\n\" https://atlasfsm.com)",
-      "Bash(nslookup www.atlasfsm.com)"
+      "Bash(nslookup www.atlasfsm.com)",
+      "Bash(curl -s -o /dev/null -I \"http://127.0.0.1:3099\")",
+      "Bash(curl -s -D - -o /dev/null \"http://127.0.0.1:3099/\")",
+      "WebFetch(domain:api.github.com)",
+      "Bash(gh variable *)",
+      "Bash(node -e \"const S=require\\('@sentry/node'\\); S.init\\({dsn:'https://a9d50b64b204aa8d8fefa26647edc714@o4511600165388288.ingest.us.sentry.io/4511600174694400', environment:'development', tracesSampleRate:0}\\); const id=S.captureException\\(new Error\\('harmony — dev environment isolation check'\\)\\); console.log\\('event id:', id\\); S.flush\\(8000\\).then\\(ok=>{console.log\\('flushed:', ok\\); process.exit\\(ok?0:1\\)}\\);\")",
+      "Bash(git switch *)"
     ]
   }
 }

@@ -1,0 +1,2 @@
+# Keeps apps/app/public/ in git so the Dockerfile's `COPY /app/public` step
+# always has a directory to copy. Static assets (fonts, images) go here.

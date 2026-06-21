@@ -16,9 +16,19 @@ RUN npm ci
 FROM node:${NODE_VERSION} AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
+# Sentry source-map upload. org/project are non-secret build args; the auth
+# token is a BuildKit secret so it never persists in an image layer. All three
+# are optional — when the token is absent (CI PR builds, local builds) the
+# upload no-ops and the build still succeeds.
+ARG SENTRY_ORG
+ARG SENTRY_PROJECT
+ENV SENTRY_ORG=$SENTRY_ORG
+ENV SENTRY_PROJECT=$SENTRY_PROJECT
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN --mount=type=secret,id=sentry_auth_token \
+    SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token 2>/dev/null || true)" \
+    npm run build
 
 # 3) runner — minimal runtime: just the standalone server + static assets.
 FROM node:${NODE_VERSION} AS runner

@@ -1,6 +1,6 @@
 name: Deploy
 
-# On merge to main: re-run gates → build & push image to GHCR → roll the VPS.
+# On merge to main: re-run gates → build & push images to GHCR → roll the VPS.
 on:
   push:
     branches: [main]
@@ -18,16 +18,20 @@ jobs:
   checks:
     name: Lint · Types · Test
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [public, harmony, app]
     defaults:
       run:
-        working-directory: apps/public
+        working-directory: apps/${{ matrix.app }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: apps/public/package-lock.json
+          cache-dependency-path: apps/${{ matrix.app }}/package-lock.json
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
@@ -39,7 +43,24 @@ jobs:
     name: Build & push image
     needs: checks
     runs-on: ubuntu-latest
+    # One image per app → ghcr.io/<repo>/<app>. Both share the IMAGE_TAG = SHA.
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [public, harmony, app]
     steps:
+      # Production must ship readable stack traces. Fail fast (before building or
+      # pushing anything) if the Sentry source-map credentials are missing, so a
+      # release can never go out silently un-symbolicated. PR CI (ci.yml) does
+      # NOT require these — it only compiles, and needs no upload.
+      - name: Require Sentry source-map config
+        env:
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          : "${SENTRY_ORG:?missing repo variable SENTRY_ORG — set it under Settings → Secrets and variables → Actions → Variables}"
+          : "${SENTRY_AUTH_TOKEN:?missing repo secret SENTRY_AUTH_TOKEN — set it under Settings → Secrets and variables → Actions → Secrets}"
+
       - uses: actions/checkout@v4
 
       - uses: docker/setup-buildx-action@v3
@@ -53,7 +74,7 @@ jobs:
       - id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}/public
+          images: ghcr.io/${{ github.repository }}/${{ matrix.app }}
           # `latest` for convenience + the full commit SHA as an immutable,
           # rollback-able tag that matches IMAGE_TAG in the deploy step.
           tags: |
@@ -62,13 +83,23 @@ jobs:
 
       - uses: docker/build-push-action@v6
         with:
-          context: apps/public
-          file: apps/public/Dockerfile
+          context: apps/${{ matrix.app }}
+          file: apps/${{ matrix.app }}/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Scope the layer cache per app so the two images don't evict each other.
+          cache-from: type=gha,scope=${{ matrix.app }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.app }}
+          # Sentry source-map upload during `next build`. Project is one-per-app
+          # (serviceos-<app>); org is a repo variable; the auth token is passed
+          # as a BuildKit secret (never baked into a layer). If SENTRY_AUTH_TOKEN
+          # is unset the build still succeeds — upload is just skipped.
+          build-args: |
+            SENTRY_ORG=${{ vars.SENTRY_ORG }}
+            SENTRY_PROJECT=serviceos-${{ matrix.app }}
+          secrets: |
+            sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
 
   deploy:
     name: Deploy to VPS
@@ -102,6 +133,6 @@ jobs:
             infra/docker-compose.yml infra/Caddyfile infra/.env \
             "$SSH_USER@$SSH_HOST:~/atlas-serviceos/"
 
-          # Pull the image we just built and roll the stack forward to this SHA.
+          # Pull the images we just built and roll the stack forward to this SHA.
           ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" \
             "cd ~/atlas-serviceos && export IMAGE_TAG=$IMAGE_TAG && docker compose pull && docker compose up -d --remove-orphans && docker image prune -f"

@@ -16,12 +16,19 @@ www.{$DOMAIN} {
 	redir https://www.{$DOMAIN}{uri} permanent
 }
 
+# Admin console — the authenticated SaaS workspace (apps/harmony).
+harmony.{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy harmony:3000
+}
+
+# Core product — the authenticated end-user workspace (apps/app).
+app.{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:3000
+}
+
 # ── Future apps (separate codebases) attach here as subdomains. To add one:
-#   1. add its service to docker-compose.yml (e.g. `app`, expose 3000)
-#   2. uncomment + adjust the block below
+#   1. add its service to docker-compose.yml (e.g. `foo`, expose 3000)
+#   2. add a site block like `app.{$DOMAIN}` above (reverse_proxy foo:3000)
 #   3. add an A record for the subdomain in Cloudflare
-#
-# app.{$DOMAIN} {
-# 	encode zstd gzip
-# 	reverse_proxy app:3000
-# }

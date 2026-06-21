@@ -15,9 +15,14 @@ jobs:
   checks:
     name: Lint · Types · Build · Test
     runs-on: ubuntu-latest
+    # One job per app under apps/. Add an app to the matrix when you scaffold it.
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [public, harmony, app]
     defaults:
       run:
-        working-directory: apps/public
+        working-directory: apps/${{ matrix.app }}
     steps:
       - uses: actions/checkout@v4
 
@@ -25,7 +30,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: apps/public/package-lock.json
+          cache-dependency-path: apps/${{ matrix.app }}/package-lock.json
 
       - run: npm ci
       - run: npm run lint

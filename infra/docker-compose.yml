@@ -20,6 +20,8 @@ services:
       ACME_EMAIL: ${ACME_EMAIL}
     depends_on:
       - public
+      - harmony
+      - app
 
   public:
     image: ghcr.io/anthonyhudson710-bot/atlas-serviceos/public:${IMAGE_TAG:-latest}
@@ -36,6 +38,32 @@ services:
       # enable Plausible, pass NEXT_PUBLIC_PLAUSIBLE_DOMAIN as a build arg in CI.
     volumes:
       - waitlist_data:/data # durable waitlist signups across deploys
+    expose:
+      - "3000" # internal only; Caddy is the public entrypoint
+
+  # Admin console — the authenticated SaaS workspace at harmony.atlasfsm.com.
+  harmony:
+    image: ghcr.io/anthonyhudson710-bot/atlas-serviceos/harmony:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+      # NOTE: NEXT_PUBLIC_APP_URL is inlined at BUILD time, not here. It defaults
+      # to https://harmony.atlasfsm.com; override via a build arg in CI if needed.
+    expose:
+      - "3000" # internal only; Caddy is the public entrypoint
+
+  # Core product — the authenticated end-user workspace at app.atlasfsm.com.
+  app:
+    image: ghcr.io/anthonyhudson710-bot/atlas-serviceos/app:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+      # NOTE: NEXT_PUBLIC_APP_URL is inlined at BUILD time, not here. It defaults
+      # to https://app.atlasfsm.com; override via a build arg in CI if needed.
     expose:
       - "3000" # internal only; Caddy is the public entrypoint
 

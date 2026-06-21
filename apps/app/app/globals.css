@@ -1,0 +1,179 @@
+@import "tailwindcss";
+
+/* ── evermore design tokens (light-only) ───────────────────────────────────
+   Shared brand system with apps/public. The Atlas app uses a dark Midnight
+   navigation rail (the --sidebar-* tokens) over a light workspace.
+   Body text defaults to Slate; headings to Ink. No dark mode. */
+:root {
+  color-scheme: light;
+
+  /* Spectrum (brand primitives) */
+  --midnight: #0b2370;
+  --royal: #1133aa;
+  --signal: #0068dc; /* primary accent / link */
+  --teal: #00b2b1;
+  --verdant: #2bbe60;
+  --lime: #a8e41b;
+
+  /* Neutrals */
+  --ink: #0c0c0d;
+  --slate: #414658; /* body text */
+  --steel: #5c6070;
+  --periwinkle: #7085cc;
+  --deep-navy: #091c5a;
+  --line: #dadbe0;
+  --mist: #ecedf1;
+  --cloud: #f2f2f3;
+  --field: #f7f7f7;
+
+  /* Semantic */
+  --background: #ffffff;
+  --workspace: var(--field); /* the scrollable content area behind white cards */
+  --surface: var(--field);
+  --surface-2: var(--cloud);
+  --foreground: var(--ink);
+  --muted: var(--slate);
+  --muted-2: var(--steel);
+  --border: var(--line);
+  --border-subtle: var(--mist);
+  --action: var(--midnight); /* primary button base */
+  --action-hover: var(--signal); /* primary button hover */
+  --brand: var(--signal); /* accent, links, keyword highlights */
+  --ring: var(--signal);
+  --success: var(--verdant);
+  --error: #dc2626;
+
+  /* Sidebar (dark Midnight rail) */
+  --sidebar: var(--midnight);
+  --sidebar-foreground: #ffffff;
+  --sidebar-muted: var(--periwinkle); /* inactive nav labels + icons */
+  --sidebar-active: var(--deep-navy); /* active item background */
+  --sidebar-border: rgb(255 255 255 / 0.1);
+
+  /* Signature gradient — 45°, six stops, source offsets preserved. */
+  --gradient-spectrum: linear-gradient(
+    45deg,
+    #0b2370 0%,
+    #1133aa 19.96%,
+    #0068dc 39.93%,
+    #00b2b1 59.89%,
+    #2bbe60 79.85%,
+    #a8e41b 100%
+  );
+}
+
+@theme inline {
+  /* Spectrum */
+  --color-midnight: var(--midnight);
+  --color-royal: var(--royal);
+  --color-signal: var(--signal);
+  --color-teal: var(--teal);
+  --color-verdant: var(--verdant);
+  --color-lime: var(--lime);
+  /* Neutrals */
+  --color-ink: var(--ink);
+  --color-slate: var(--slate);
+  --color-steel: var(--steel);
+  --color-periwinkle: var(--periwinkle);
+  --color-deep-navy: var(--deep-navy);
+  --color-line: var(--line);
+  --color-mist: var(--mist);
+  --color-cloud: var(--cloud);
+  --color-field: var(--field);
+  /* Semantic */
+  --color-background: var(--background);
+  --color-workspace: var(--workspace);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-brand: var(--brand);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-error: var(--error);
+  /* Sidebar */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-border: var(--sidebar-border);
+
+  --font-sans: var(--font-figtree), "Helvetica Neue", Helvetica, Inter, Arial, sans-serif;
+
+  /* Cards are gently rounded (5px); buttons/inputs handle their own radii. */
+  --radius-card: 5px;
+
+  /* Tinted, layered elevation — never plain black (evermore §8). */
+  --shadow-card: 0 1px 5px rgb(85 124 176 / 0.03), 0 4px 18px rgb(85 124 176 / 0.04),
+    0 17px 80px rgb(85 124 176 / 0.07);
+  --shadow-overlay: 0 8px 24px rgb(43 47 59 / 0.17);
+}
+
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--muted); /* default body = Slate */
+    font-feature-settings: "ss01" on; /* evermore stylistic set */
+    letter-spacing: -0.01em; /* global tightening */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--foreground);
+    text-wrap: balance;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--signal) 22%, transparent);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* iOS Safari draws native chrome (rounded corners, inset shadow, its own
+     background) on form controls and ignores the unprefixed `appearance`.
+     Reset with the -webkit- prefix so our Tailwind bg/border/radius apply. */
+  input,
+  textarea,
+  select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: 0;
+    background-clip: padding-box;
+  }
+}
+
+/* Signature spectrum gradient utilities (plain classes, always emitted). */
+.bg-spectrum {
+  background-image: var(--gradient-spectrum);
+}
+.text-spectrum {
+  background-image: var(--gradient-spectrum);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

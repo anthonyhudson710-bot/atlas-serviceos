@@ -7,9 +7,11 @@ reverse proxy.
 | App | Path | Domain |
 | --- | --- | --- |
 | Public marketing site | [`apps/public`](apps/public) | `www.atlasfsm.com` (apex redirects to www) |
+| Harmony — admin console | [`apps/harmony`](apps/harmony) | `harmony.atlasfsm.com` |
+| App — core product | [`apps/app`](apps/app) | `app.atlasfsm.com` |
 
-Future apps attach as subdomains (e.g. `app.atlasfsm.com`) — see
-[Adding an app](#adding-an-app).
+Each app is a self-contained Next.js codebase that builds to its own image and
+attaches as a subdomain — see [Adding an app](#adding-an-app).
 
 ## How deploys work
 
@@ -56,8 +58,12 @@ docker run --rm -p 3000:3000 atlas-public
 ## Adding an app
 
 1. Scaffold it under `apps/<name>/` with its own `Dockerfile`
-   (copy `apps/public/Dockerfile` as a starting point).
+   (copy `apps/harmony/Dockerfile` as a starting point — it has no app-specific
+   volumes, unlike `apps/public`).
 2. Add a service to [`infra/docker-compose.yml`](infra/docker-compose.yml) and a
    site block to [`infra/Caddyfile`](infra/Caddyfile) for `<name>.atlasfsm.com`.
-3. Add a `build-push` step for the new image and an A record in Cloudflare.
-4. Extend the CI gates to cover the new app path.
+3. Add `<name>` to the `app` matrix in both
+   [`ci.yml`](.github/workflows/ci.yml) and
+   [`deploy.yml`](.github/workflows/deploy.yml) — that covers the gates and the
+   image build at once.
+4. Add an A record for the subdomain in Cloudflare.
