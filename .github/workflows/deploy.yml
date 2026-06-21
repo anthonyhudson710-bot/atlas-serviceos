@@ -101,9 +101,42 @@ jobs:
           secrets: |
             sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
 
+  build-push-caddy:
+    name: Build & push Caddy image
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/caddy
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long,prefix=
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: infra/caddy
+          file: infra/caddy/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=caddy
+          cache-to: type=gha,mode=max,scope=caddy
+
   deploy:
     name: Deploy to VPS
-    needs: build-push
+    needs: [build-push, build-push-caddy]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -116,12 +149,14 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           set -euo pipefail
-          # api + postgres need these at runtime; fail before touching the server
-          # rather than boot a stack with no DB password / unsigned sessions.
+          # api + postgres + Caddy DNS-01 need these at runtime; fail before
+          # touching the server rather than boot a broken stack.
           : "${POSTGRES_PASSWORD:?missing repo secret POSTGRES_PASSWORD}"
           : "${JWT_SECRET:?missing repo secret JWT_SECRET}"
+          : "${CLOUDFLARE_API_TOKEN:?missing repo secret CLOUDFLARE_API_TOKEN}"
           mkdir -p ~/.ssh
           # Write the key stripping any CR (CRLF paste) and forcing a trailing
           # newline — both are common causes of "error in libcrypto".
@@ -141,7 +176,7 @@ jobs:
 
           # Write the compose secrets file (api + postgres) via stdin so the
           # values never appear in a process listing on the server.
-          printf 'POSTGRES_PASSWORD=%s\nJWT_SECRET=%s\n' "$POSTGRES_PASSWORD" "$JWT_SECRET" \
+          printf 'POSTGRES_PASSWORD=%s\nJWT_SECRET=%s\nCLOUDFLARE_API_TOKEN=%s\n' "$POSTGRES_PASSWORD" "$JWT_SECRET" "$CLOUDFLARE_API_TOKEN" \
             | ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" "umask 077 && cat > ~/atlas-serviceos/.env.secrets"
 
           # Pull the images we just built and roll the stack forward to this SHA.

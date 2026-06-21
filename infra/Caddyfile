@@ -1,8 +1,12 @@
-# Caddy auto-provisions Let's Encrypt TLS for every site block below, as long
-# as the domains' DNS A records point at this server (Cloudflare set to
-# "DNS only" / grey-cloud while certs are issued by Caddy directly).
+# Caddy auto-provisions Let's Encrypt TLS for every site block below. Certs are
+# issued/renewed via the ACME DNS-01 challenge using a Cloudflare API token
+# (acme_dns below), which proves domain ownership through a DNS TXT record. That
+# works regardless of proxy status, so all records can stay proxied (orange) —
+# no more grey-clouding to issue certs. Requires the caddy-dns/cloudflare module
+# (see infra/caddy/Dockerfile) and CLOUDFLARE_API_TOKEN in the environment.
 {
 	email {$ACME_EMAIL}
+	acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
 }
 
 # Canonical host — the public marketing site.

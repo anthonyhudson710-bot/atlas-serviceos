@@ -6,7 +6,9 @@ name: atlas
 # (defaults to `latest` for manual runs); DOMAIN/ACME_EMAIL come from ./.env.
 services:
   caddy:
-    image: caddy:2-alpine
+    # Custom build = Caddy + caddy-dns/cloudflare, so TLS certs issue/renew via
+    # the DNS-01 challenge (works while domains are proxied). Built in CI.
+    image: ghcr.io/anthonyhudson710-bot/atlas-serviceos/caddy:${IMAGE_TAG:-latest}
     restart: unless-stopped
     ports:
       - "80:80"
@@ -15,6 +17,9 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data # persisted TLS certs — survives deploys, avoids ACME rate limits
       - caddy_config:/config
+    # CLOUDFLARE_API_TOKEN for the DNS-01 challenge comes from .env.secrets.
+    env_file:
+      - .env.secrets
     environment:
       DOMAIN: ${DOMAIN}
       ACME_EMAIL: ${ACME_EMAIL}
