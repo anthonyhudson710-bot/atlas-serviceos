@@ -20,5 +20,11 @@ Sentry.init({
   // Forward structured logs to Sentry.
   enableLogs: true,
 
+  // Sentry is ON in prod, OFF in dev by default. Flip with SENTRY_ENABLED =
+  // "true" | "false" — e.g. "true" to debug in dev, "false" to silence noise.
+  enabled:
+    process.env.SENTRY_ENABLED === "true" ||
+    (process.env.SENTRY_ENABLED !== "false" && isProd),
+
   debug: false,
 });

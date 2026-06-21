@@ -19,5 +19,12 @@ Sentry.init({
 
   enableLogs: true,
 
+  // Sentry is ON in prod, OFF in dev by default. Flip per environment with
+  // NEXT_PUBLIC_SENTRY_ENABLED = "true" | "false" — e.g. "true" to debug a bug
+  // in dev, "false" to silence dev noise (set it, then restart the dev server).
+  enabled:
+    process.env.NEXT_PUBLIC_SENTRY_ENABLED === "true" ||
+    (process.env.NEXT_PUBLIC_SENTRY_ENABLED !== "false" && isProd),
+
   debug: false,
 });

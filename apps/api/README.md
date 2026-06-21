@@ -33,6 +33,7 @@ npm run test
 | `COOKIE_DOMAIN` | Session cookie domain | unset (host-only) → `.atlasfsm.com` in prod |
 | `CORS_ORIGINS` | Comma-separated allowed origins (credentialed) | localhost |
 | `SENTRY_DSN` | Override the committed serviceos-api DSN | committed default |
+| `SENTRY_ENABLED` | Force Sentry on/off: `"true"` \| `"false"` | unset → on in prod, off in dev |
 
 ## Endpoints
 
