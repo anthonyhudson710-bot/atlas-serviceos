@@ -88,8 +88,18 @@ const LOGIN_HTML = `<!doctype html>
         msg.textContent = (data && data.message) || "Sign in failed.";
         return;
       }
-      const redirect = params.get("redirect");
-      location.href = redirect && redirect.startsWith("https://") ? redirect : "/auth/me";
+      // Only redirect back to first-party hosts — never an attacker-supplied URL.
+      const target = params.get("redirect");
+      let dest = "/auth/me";
+      if (target) {
+        try {
+          const u = new URL(target);
+          if (u.hostname === "localhost" || u.hostname === "atlasfsm.com" || u.hostname.endsWith(".atlasfsm.com")) {
+            dest = target;
+          }
+        } catch {}
+      }
+      location.href = dest;
     } catch {
       msg.textContent = "Network error.";
     }

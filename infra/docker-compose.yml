@@ -51,10 +51,14 @@ services:
   harmony:
     image: ghcr.io/anthonyhudson710-bot/atlas-serviceos/harmony:${IMAGE_TAG:-latest}
     restart: unless-stopped
+    # JWT_SECRET (read by proxy.ts to verify the shared session) is in .env.secrets.
+    env_file:
+      - .env.secrets
     environment:
       NODE_ENV: production
       PORT: "3000"
       HOSTNAME: 0.0.0.0
+      IAM_URL: https://iam.atlasfsm.com
       # NOTE: NEXT_PUBLIC_APP_URL is inlined at BUILD time, not here. It defaults
       # to https://harmony.atlasfsm.com; override via a build arg in CI if needed.
     expose:
@@ -64,10 +68,14 @@ services:
   app:
     image: ghcr.io/anthonyhudson710-bot/atlas-serviceos/app:${IMAGE_TAG:-latest}
     restart: unless-stopped
+    # JWT_SECRET (read by proxy.ts to verify the shared session) is in .env.secrets.
+    env_file:
+      - .env.secrets
     environment:
       NODE_ENV: production
       PORT: "3000"
       HOSTNAME: 0.0.0.0
+      IAM_URL: https://iam.atlasfsm.com
       # NOTE: NEXT_PUBLIC_APP_URL is inlined at BUILD time, not here. It defaults
       # to https://app.atlasfsm.com; override via a build arg in CI if needed.
     expose:
