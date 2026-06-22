@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { ChartLineUp, Plus } from "@phosphor-icons/react/dist/ssr";
+import { Plus } from "@phosphor-icons/react/dist/ssr";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { SystemStatus } from "@/components/dashboard/SystemStatus";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -20,20 +20,10 @@ export default function DashboardPage() {
         }
       />
 
-      {/* Blank state — widgets land here as the console is built out. */}
-      <Card className="mt-8 grid place-items-center px-6 py-20 text-center">
-        <span
-          aria-hidden="true"
-          className="grid size-14 place-items-center rounded-full bg-surface-2 text-brand"
-        >
-          <ChartLineUp size={26} />
-        </span>
-        <h2 className="mt-5 text-lg font-bold text-foreground">Nothing to show yet</h2>
-        <p className="mt-1 max-w-sm text-sm text-muted">
-          Once jobs, schedules, and invoices start flowing, your at-a-glance
-          metrics and activity will appear here.
-        </p>
-      </Card>
+      {/* Dashboard widgets. System status is live; more land here over time. */}
+      <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
+        <SystemStatus />
+      </div>
     </div>
   );
 }

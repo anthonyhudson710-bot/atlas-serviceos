@@ -41,6 +41,7 @@
   --brand: var(--signal); /* accent, links, keyword highlights */
   --ring: var(--signal);
   --success: var(--verdant);
+  --warning: #b45309; /* amber — degraded / caution */
   --error: #dc2626;
 
   /* Sidebar (dark Midnight rail) */
@@ -95,6 +96,7 @@
   --color-brand: var(--brand);
   --color-ring: var(--ring);
   --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-error: var(--error);
   /* Sidebar */
   --color-sidebar: var(--sidebar);

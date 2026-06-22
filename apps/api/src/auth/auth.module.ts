@@ -21,6 +21,7 @@ function jwtSecret(): string {
   imports: [
     TypeOrmModule.forFeature([User]),
     JwtModule.register({
+      global: true,
       secret: jwtSecret(),
       signOptions: { expiresIn: "7d" },
     }),
