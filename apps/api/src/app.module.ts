@@ -5,6 +5,7 @@ import { SentryModule, SentryGlobalFilter } from "@sentry/nestjs/setup";
 import { AppController } from "./app.controller";
 import { AuthModule } from "./auth/auth.module";
 import { StatusModule } from "./status/status.module";
+import { MetricsModule } from "./metrics/metrics.module";
 import { User } from "./auth/user.entity";
 
 @Module({
@@ -30,6 +31,7 @@ import { User } from "./auth/user.entity";
 
     AuthModule,
     StatusModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [

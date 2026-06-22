@@ -6,10 +6,14 @@ import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
 import cookieParser from "cookie-parser";
 import { AppModule } from "./app.module";
+import { TrafficMetricsService } from "./metrics/traffic-metrics.service";
+import { trafficMiddleware } from "./metrics/traffic.middleware";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Record request metrics (status/latency/route) into the rolling window.
+  app.use(trafficMiddleware(app.get(TrafficMetricsService)));
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
