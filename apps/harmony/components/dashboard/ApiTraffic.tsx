@@ -1,9 +1,9 @@
 "use client";
 
-// Live API traffic for the dashboard. Polls the API's in-process /metrics/traffic
-// rolling window and renders a per-minute, status-stacked timeline plus summary
-// stats. The source is honest about its limits (API-process only, resets on
-// deploy, small real numbers) — those caveats are surfaced, not hidden.
+// Live API traffic for the dashboard. Polls the API's persistent /metrics/traffic
+// aggregator and renders a per-minute, status-stacked timeline plus summary
+// stats. The source is honest about its scope (requests reaching the API, small
+// real numbers; persisted across deploys) — those caveats are surfaced, not hidden.
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowsClockwise,
@@ -151,7 +151,7 @@ export function ApiTraffic() {
       <div className="ac-cardh items-start">
         <div className="min-w-0">
           <span className="ac-cardt">API traffic</span>
-          <p className="ac-tert mt-[3px] text-[11px]">Platform API · in-process counter</p>
+          <p className="ac-tert mt-[3px] text-[11px]">Platform API · persistent counter</p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1.5">
           <div className="ac-seg" role="group" aria-label="Time window">
@@ -229,7 +229,7 @@ function Loaded({
       {partial && (
         <div className="mb-3 flex items-start gap-[7px] rounded-md border border-[var(--amber-200)] bg-[var(--amber-50)] px-[10px] py-[7px] text-[11.5px] leading-[1.45] text-[var(--color-text-secondary)]">
           <Info size={13} weight="fill" aria-hidden="true" className="mt-px shrink-0 text-[var(--color-text-warning)]" />
-          Window starts {sinceLabel} — shorter than a full {windowWord} after a recent deploy.
+          Window starts {sinceLabel} — less than a full {windowWord} of history yet.
         </div>
       )}
 
@@ -398,7 +398,7 @@ function Empty({
       </div>
       <p className="ac-muted text-[12px] leading-[1.5]">
         {partial
-          ? `The window starts ${sinceLabel} (after a recent deploy) and has seen no traffic yet.`
+          ? `The window starts ${sinceLabel} and has seen no traffic yet.`
           : "Nothing has hit the API in this window. Health checks and dashboard polling aren’t counted."}
       </p>
     </div>
@@ -450,8 +450,8 @@ function Footnote({ source, excludes }: { source: string; excludes: string[] }) 
     <p className="ac-tert mt-3 flex items-start gap-[6px] border-t border-[var(--color-border-subtle)] pt-2.5 text-[10.5px] leading-[1.5]">
       <Info size={12} aria-hidden="true" className="mt-px shrink-0" />
       <span>
-        {source} · excludes {excludes.length ? excludes.join(", ") : "internal endpoints"} · resets on
-        deploy
+        {source} · excludes {excludes.length ? excludes.join(", ") : "internal endpoints"} · persisted
+        (Postgres)
       </span>
     </p>
   );

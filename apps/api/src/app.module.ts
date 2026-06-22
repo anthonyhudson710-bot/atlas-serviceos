@@ -7,6 +7,7 @@ import { AuthModule } from "./auth/auth.module";
 import { StatusModule } from "./status/status.module";
 import { MetricsModule } from "./metrics/metrics.module";
 import { User } from "./auth/user.entity";
+import { TrafficMinute } from "./metrics/traffic-minute.entity";
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { User } from "./auth/user.entity";
       username: process.env.POSTGRES_USER ?? "atlas",
       password: process.env.POSTGRES_PASSWORD ?? "atlas",
       database: process.env.POSTGRES_DB ?? "atlas",
-      entities: [User],
+      entities: [User, TrafficMinute],
       // Auto-creates the schema from entities. Fine for this scaffold; switch to
       // committed migrations before there's data you can't afford to lose.
       synchronize: process.env.DB_SYNCHRONIZE !== "false",

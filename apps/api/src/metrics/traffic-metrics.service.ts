@@ -1,4 +1,7 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Between, LessThan, Repository } from "typeorm";
+import { TrafficMinute } from "./traffic-minute.entity";
 
 export interface RecordInput {
   statusCode: number;
@@ -8,7 +11,7 @@ export interface RecordInput {
 }
 
 export interface TrafficBucket {
-  t: string; // ISO minute start
+  t: string;
   total: number;
   "2xx": number;
   "3xx": number;
@@ -20,160 +23,235 @@ export interface TrafficBucket {
 export interface TrafficSnapshot {
   window: string;
   since: string;
-  source: "api-process";
+  source: string;
   excludes: string[];
   total: number;
   reqPerSec: number;
-  statusMix: Record<string, number>; // class -> fraction (0..1)
-  statusCodes: Record<string, number>; // "200" -> count
+  statusMix: Record<string, number>;
+  statusCodes: Record<string, number>;
   latencyMs: { p50: number; p95: number; p99: number } | null;
   buckets: TrafficBucket[];
   topRoutes: Array<{ route: string; count: number; errorRate: number }>;
 }
 
-interface Bucket {
-  minute: number; // epoch minutes
+// Latency histogram bucket upper bounds in ms; an extra overflow bucket trails.
+const LAT_BOUNDS = [5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
+const HIST_LEN = LAT_BOUNDS.length + 1;
+
+const MAX_MINUTES = 60; // widest window the dashboard requests
+const FLUSH_MS = 10_000; // persist the live minute(s) this often
+const RETENTION_DAYS = 7;
+const CLEANUP_MS = 60 * 60_000;
+const ROUTE_CAP = 100;
+const EXCLUDES = ["/health", "/status", "/metrics"];
+
+interface MinuteAgg {
+  minuteMs: number;
   total: number;
-  classes: Record<string, number>;
+  c2xx: number;
+  c3xx: number;
+  c4xx: number;
+  c5xx: number;
   codes: Record<string, number>;
-  latencies: number[];
-  latencyCount: number; // total observed (drives reservoir replacement)
+  hist: number[];
   routes: Map<string, { count: number; errors: number }>;
 }
 
-const MAX_MINUTES = 60; // we retain the last hour
-const LATENCY_CAP = 2000; // reservoir size per minute — bounds memory under load
-const ROUTE_CAP = 100; // distinct routes per minute before overflow → "other"
-const EXCLUDES = ["/health", "/status", "/metrics"]; // internal probes / self
-
 /**
- * In-process, in-memory rolling-window traffic metrics for the API. A middleware
- * feeds every (non-internal) request in via record(); the dashboard reads an
- * aggregate via snapshot(). This is the honest Tier-1 source:
- *   - counts only requests that reach THIS API process (not edge/static),
- *   - resets on redeploy (state is in memory),
- *   - single-instance (the API runs one container).
- * For unsampled, persistent, all-ingress metrics, point the same contract at
- * Caddy/Prometheus later (source would change from "api-process").
+ * Persistent (Tier-2) traffic metrics. Requests are aggregated in memory per
+ * minute and flushed to Postgres, so the data survives API redeploys/restarts.
+ * Reads come from Postgres (overlaid with the still-in-memory live minute for
+ * freshness). Scope is still "requests that reach this API" — for all-ingress
+ * (incl. 502s), the same contract can later be fed from Caddy access logs.
  */
 @Injectable()
-export class TrafficMetricsService {
-  private readonly buckets = new Map<number, Bucket>();
-  private readonly startedAt = Date.now();
+export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
+  constructor(
+    @InjectRepository(TrafficMinute) private readonly repo: Repository<TrafficMinute>,
+  ) {}
 
   static readonly excludes = EXCLUDES;
 
+  private readonly buffer = new Map<number, MinuteAgg>();
+  private readonly dirty = new Set<number>();
+  private flushTimer?: ReturnType<typeof setInterval>;
+  private flushing = false;
+  private lastCleanup = 0;
+
+  async onModuleInit(): Promise<void> {
+    // Restore the current minute so a mid-minute restart keeps its earlier count.
+    const minuteMs = currentMinuteMs();
+    try {
+      const row = await this.repo.findOne({ where: { minute: new Date(minuteMs) } });
+      if (row) this.buffer.set(minuteMs, entityToAgg(row));
+    } catch {
+      // DB not ready yet — fine, we start fresh and flush later.
+    }
+    this.flushTimer = setInterval(() => void this.flush(), FLUSH_MS);
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    if (this.flushTimer) clearInterval(this.flushTimer);
+    await this.flush(); // capture the live partial minute before shutdown/deploy
+  }
+
   record(input: RecordInput): void {
-    const minute = Math.floor(Date.now() / 60_000);
-    let b = this.buckets.get(minute);
-    if (!b) {
-      b = {
-        minute,
-        total: 0,
-        classes: {},
-        codes: {},
-        latencies: [],
-        latencyCount: 0,
-        routes: new Map(),
-      };
-      this.buckets.set(minute, b);
-      this.evict(minute);
+    const minuteMs = currentMinuteMs();
+    let agg = this.buffer.get(minuteMs);
+    if (!agg) {
+      agg = emptyAgg(minuteMs);
+      this.buffer.set(minuteMs, agg);
     }
 
-    b.total++;
-
-    const cls = `${Math.floor(input.statusCode / 100)}xx`;
-    b.classes[cls] = (b.classes[cls] ?? 0) + 1;
-
+    agg.total++;
+    switch (Math.floor(input.statusCode / 100)) {
+      case 2:
+        agg.c2xx++;
+        break;
+      case 3:
+        agg.c3xx++;
+        break;
+      case 4:
+        agg.c4xx++;
+        break;
+      case 5:
+        agg.c5xx++;
+        break;
+    }
     const code = String(input.statusCode);
-    b.codes[code] = (b.codes[code] ?? 0) + 1;
+    agg.codes[code] = (agg.codes[code] ?? 0) + 1;
+    agg.hist[histIndex(input.latencyMs)]++;
 
-    // Reservoir-sample latencies so a traffic spike can't grow memory unbounded.
-    b.latencyCount++;
-    if (b.latencies.length < LATENCY_CAP) {
-      b.latencies.push(input.latencyMs);
-    } else {
-      const j = Math.floor(Math.random() * b.latencyCount);
-      if (j < LATENCY_CAP) b.latencies[j] = input.latencyMs;
-    }
-
-    // Per-route tallies, capped so a path-traversal / cardinality blowup can't
-    // grow the map without bound.
     let key = `${input.method} ${input.route}`;
-    if (!b.routes.has(key) && b.routes.size >= ROUTE_CAP) key = "other";
-    let r = b.routes.get(key);
+    if (!agg.routes.has(key) && agg.routes.size >= ROUTE_CAP) key = "other";
+    let r = agg.routes.get(key);
     if (!r) {
       r = { count: 0, errors: 0 };
-      b.routes.set(key, r);
+      agg.routes.set(key, r);
     }
     r.count++;
     if (input.statusCode >= 500) r.errors++;
+
+    this.dirty.add(minuteMs);
   }
 
-  snapshot(windowMinutes: number): TrafficSnapshot {
-    const minutes = Math.min(MAX_MINUTES, Math.max(1, windowMinutes));
-    const nowMin = Math.floor(Date.now() / 60_000);
-    const from = nowMin - (minutes - 1);
-
-    const classes: Record<string, number> = {};
-    const codes: Record<string, number> = {};
-    const routes = new Map<string, { count: number; errors: number }>();
-    const latencies: number[] = [];
-    const buckets: TrafficBucket[] = [];
-    let total = 0;
-
-    for (let m = from; m <= nowMin; m++) {
-      const b = this.buckets.get(m);
-      const entry: TrafficBucket = {
-        t: new Date(m * 60_000).toISOString(),
-        total: b?.total ?? 0,
-        "2xx": b?.classes["2xx"] ?? 0,
-        "3xx": b?.classes["3xx"] ?? 0,
-        "4xx": b?.classes["4xx"] ?? 0,
-        "5xx": b?.classes["5xx"] ?? 0,
-        p95: null,
-      };
-      if (b) {
-        total += b.total;
-        for (const [k, v] of Object.entries(b.classes)) classes[k] = (classes[k] ?? 0) + v;
-        for (const [k, v] of Object.entries(b.codes)) codes[k] = (codes[k] ?? 0) + v;
-        for (const [k, v] of b.routes) {
-          const r = routes.get(k) ?? { count: 0, errors: 0 };
-          r.count += v.count;
-          r.errors += v.errors;
-          routes.set(k, r);
+  private async flush(): Promise<void> {
+    if (this.flushing) return;
+    this.flushing = true;
+    try {
+      const pending = [...this.dirty];
+      this.dirty.clear();
+      for (const m of pending) {
+        const agg = this.buffer.get(m);
+        if (agg) {
+          // The buffer holds the FULL minute (restored on boot), so a replace
+          // upsert is correct and idempotent on a single instance.
+          await this.repo.upsert(aggToEntity(agg), ["minute"]);
         }
-        latencies.push(...b.latencies);
-        entry.p95 = percentile(b.latencies, 95);
       }
-      buckets.push(entry);
+      // Drop minutes that can no longer receive records (already final in DB).
+      const keep = currentMinuteMs() - 60_000;
+      for (const m of [...this.buffer.keys()]) if (m < keep) this.buffer.delete(m);
+
+      const now = Date.now();
+      if (now - this.lastCleanup > CLEANUP_MS) {
+        this.lastCleanup = now;
+        await this.repo.delete({ minute: LessThan(new Date(now - RETENTION_DAYS * 86_400_000)) });
+      }
+    } catch {
+      // Re-mark so the next cycle retries; never let metrics flushing crash.
+      for (const m of this.buffer.keys()) this.dirty.add(m);
+    } finally {
+      this.flushing = false;
     }
+  }
+
+  async snapshot(windowMinutes: number): Promise<TrafficSnapshot> {
+    const minutes = Math.min(MAX_MINUTES, Math.max(1, windowMinutes));
+    const nowMin = currentMinuteMs();
+    const fromMs = nowMin - (minutes - 1) * 60_000;
+
+    const rows = await this.repo.find({
+      where: { minute: Between(new Date(fromMs), new Date(nowMin)) },
+      order: { minute: "ASC" },
+    });
+
+    const byMinute = new Map<number, MinuteAgg>();
+    for (const row of rows) byMinute.set(row.minute.getTime(), entityToAgg(row));
+    // Overlay the in-memory live minute(s) — fresher than the last flush.
+    for (const [m, agg] of this.buffer) {
+      if (m >= fromMs && m <= nowMin) byMinute.set(m, agg);
+    }
+
+    let total = 0;
+    let c2xx = 0;
+    let c3xx = 0;
+    let c4xx = 0;
+    let c5xx = 0;
+    const codes: Record<string, number> = {};
+    const hist = new Array<number>(HIST_LEN).fill(0);
+    const routes = new Map<string, { count: number; errors: number }>();
+    const buckets: TrafficBucket[] = [];
+
+    for (let m = fromMs; m <= nowMin; m += 60_000) {
+      const agg = byMinute.get(m);
+      const entry: TrafficBucket = {
+        t: new Date(m).toISOString(),
+        total: agg?.total ?? 0,
+        "2xx": agg?.c2xx ?? 0,
+        "3xx": agg?.c3xx ?? 0,
+        "4xx": agg?.c4xx ?? 0,
+        "5xx": agg?.c5xx ?? 0,
+        p95: agg ? percentileFromHist(agg.hist, 95) : null,
+      };
+      buckets.push(entry);
+      if (!agg) continue;
+
+      total += agg.total;
+      c2xx += agg.c2xx;
+      c3xx += agg.c3xx;
+      c4xx += agg.c4xx;
+      c5xx += agg.c5xx;
+      for (const [k, v] of Object.entries(agg.codes)) codes[k] = (codes[k] ?? 0) + v;
+      for (let i = 0; i < HIST_LEN; i++) hist[i] += agg.hist[i] ?? 0;
+      for (const [k, v] of agg.routes) {
+        const r = routes.get(k) ?? { count: 0, errors: 0 };
+        r.count += v.count;
+        r.errors += v.errors;
+        routes.set(k, r);
+      }
+    }
+
+    const earliestMs = await this.earliestMinuteMs();
+    const sinceMs = earliestMs != null ? Math.max(fromMs, earliestMs) : fromMs;
+    const elapsedSec = Math.max(1, (Date.now() - sinceMs) / 1000);
 
     const statusMix: Record<string, number> = {};
-    for (const [k, v] of Object.entries(classes)) {
-      statusMix[k] = total > 0 ? round(v / total, 4) : 0;
+    if (total > 0) {
+      statusMix["2xx"] = round(c2xx / total, 4);
+      statusMix["3xx"] = round(c3xx / total, 4);
+      statusMix["4xx"] = round(c4xx / total, 4);
+      statusMix["5xx"] = round(c5xx / total, 4);
     }
 
-    const sorted = [...latencies].sort((a, c) => a - c);
     const latencyMs =
-      sorted.length > 0
+      total > 0
         ? {
-            p50: Math.round(percentile(sorted, 50, true) ?? 0),
-            p95: Math.round(percentile(sorted, 95, true) ?? 0),
-            p99: Math.round(percentile(sorted, 99, true) ?? 0),
+            p50: percentileFromHist(hist, 50) ?? 0,
+            p95: percentileFromHist(hist, 95) ?? 0,
+            p99: percentileFromHist(hist, 99) ?? 0,
           }
         : null;
 
-    const elapsedSec = Math.max(1, Math.min(minutes * 60, (Date.now() - this.startedAt) / 1000));
     const topRoutes = [...routes.entries()]
       .map(([route, r]) => ({ route, count: r.count, errorRate: r.count > 0 ? round(r.errors / r.count, 4) : 0 }))
-      .sort((a, c) => c.count - a.count)
+      .sort((a, b) => b.count - a.count)
       .slice(0, 8);
 
     return {
       window: `${minutes}m`,
-      since: new Date(Math.max(this.startedAt, from * 60_000)).toISOString(),
-      source: "api-process",
+      since: new Date(sinceMs).toISOString(),
+      source: "API requests",
       excludes: EXCLUDES,
       total,
       reqPerSec: round(total / elapsedSec, 3),
@@ -185,20 +263,92 @@ export class TrafficMetricsService {
     };
   }
 
-  private evict(currentMinute: number): void {
-    const cutoff = currentMinute - (MAX_MINUTES - 1);
-    for (const m of this.buckets.keys()) {
-      if (m < cutoff) this.buckets.delete(m);
+  private async earliestMinuteMs(): Promise<number | null> {
+    let earliest: number | null = null;
+    for (const m of this.buffer.keys()) earliest = earliest == null ? m : Math.min(earliest, m);
+    const row = await this.repo.find({ order: { minute: "ASC" }, take: 1 });
+    if (row[0]) {
+      const dbMs = row[0].minute.getTime();
+      earliest = earliest == null ? dbMs : Math.min(earliest, dbMs);
     }
+    return earliest;
   }
 }
 
-// Nearest-rank percentile. Pass preSorted=true when the array is already sorted.
-function percentile(values: number[], p: number, preSorted = false): number | null {
-  if (values.length === 0) return null;
-  const arr = preSorted ? values : [...values].sort((a, b) => a - b);
-  const idx = Math.min(arr.length - 1, Math.max(0, Math.ceil((p / 100) * arr.length) - 1));
-  return arr[idx];
+function currentMinuteMs(): number {
+  return Math.floor(Date.now() / 60_000) * 60_000;
+}
+
+function emptyAgg(minuteMs: number): MinuteAgg {
+  return {
+    minuteMs,
+    total: 0,
+    c2xx: 0,
+    c3xx: 0,
+    c4xx: 0,
+    c5xx: 0,
+    codes: {},
+    hist: new Array<number>(HIST_LEN).fill(0),
+    routes: new Map(),
+  };
+}
+
+function aggToEntity(agg: MinuteAgg): TrafficMinute {
+  const e = new TrafficMinute();
+  e.minute = new Date(agg.minuteMs);
+  e.total = agg.total;
+  e.c2xx = agg.c2xx;
+  e.c3xx = agg.c3xx;
+  e.c4xx = agg.c4xx;
+  e.c5xx = agg.c5xx;
+  e.codes = agg.codes;
+  e.latHist = agg.hist;
+  e.routes = Object.fromEntries(agg.routes);
+  return e;
+}
+
+function entityToAgg(row: TrafficMinute): MinuteAgg {
+  const hist = new Array<number>(HIST_LEN).fill(0);
+  if (Array.isArray(row.latHist)) {
+    for (let i = 0; i < HIST_LEN; i++) hist[i] = row.latHist[i] ?? 0;
+  }
+  return {
+    minuteMs: row.minute.getTime(),
+    total: row.total,
+    c2xx: row.c2xx,
+    c3xx: row.c3xx,
+    c4xx: row.c4xx,
+    c5xx: row.c5xx,
+    codes: row.codes ?? {},
+    hist,
+    routes: new Map(Object.entries(row.routes ?? {})),
+  };
+}
+
+function histIndex(ms: number): number {
+  for (let i = 0; i < LAT_BOUNDS.length; i++) if (ms <= LAT_BOUNDS[i]) return i;
+  return HIST_LEN - 1;
+}
+
+// Interpolated percentile from a summed histogram. Returns null for no samples.
+function percentileFromHist(hist: number[], p: number): number | null {
+  let total = 0;
+  for (const c of hist) total += c;
+  if (total === 0) return null;
+
+  const rank = Math.ceil((p / 100) * total);
+  let cum = 0;
+  for (let i = 0; i < HIST_LEN; i++) {
+    const count = hist[i] ?? 0;
+    cum += count;
+    if (cum >= rank) {
+      const lower = i === 0 ? 0 : LAT_BOUNDS[i - 1];
+      const upper = i < LAT_BOUNDS.length ? LAT_BOUNDS[i] : LAT_BOUNDS[LAT_BOUNDS.length - 1];
+      const within = count > 0 ? (rank - (cum - count)) / count : 0;
+      return Math.round(lower + (upper - lower) * within);
+    }
+  }
+  return LAT_BOUNDS[LAT_BOUNDS.length - 1];
 }
 
 function round(n: number, dp: number): number {
