@@ -12,8 +12,8 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  // Sentry browser SDK / Session Replay POST events to the ingest endpoint.
-  "connect-src 'self' https://*.ingest.us.sentry.io",
+  // 'self' + the shared API (auth/logout, future API calls) + Sentry ingest.
+  "connect-src 'self' https://api.atlasfsm.com https://*.ingest.us.sentry.io",
   // Session Replay compresses payloads in a blob-backed web worker.
   "worker-src 'self' blob:",
   "frame-ancestors 'none'",
