@@ -16,7 +16,7 @@ export function MobileMenuButton() {
       onClick={() => setOpen(!open)}
       aria-label={open ? "Close navigation" : "Open navigation"}
       aria-expanded={open}
-      className="grid size-10 shrink-0 place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-foreground lg:hidden"
+      className="ac-btn b-ghost size-[34px] shrink-0 px-0 lg:hidden"
     >
       {open ? <X size={22} aria-hidden="true" /> : <List size={22} aria-hidden="true" />}
     </button>

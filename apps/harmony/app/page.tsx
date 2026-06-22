@@ -3,6 +3,7 @@ import { Plus } from "@phosphor-icons/react/dist/ssr";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { SystemStatus } from "@/components/dashboard/SystemStatus";
+import { ApiTraffic } from "@/components/dashboard/ApiTraffic";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -20,9 +21,10 @@ export default function DashboardPage() {
         }
       />
 
-      {/* Dashboard widgets. System status is live; more land here over time. */}
+      {/* Dashboard widgets. System status + API traffic are live; more land here over time. */}
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
         <SystemStatus />
+        <ApiTraffic />
       </div>
     </div>
   );

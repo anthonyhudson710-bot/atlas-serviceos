@@ -20,8 +20,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // Midnight — matches the rail and the mobile browser chrome.
-  themeColor: "#0b2370",
+  // White — matches the light global header at the top of the viewport.
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

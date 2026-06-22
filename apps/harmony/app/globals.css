@@ -170,6 +170,208 @@
   color: transparent;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Atlas Console shell — ported from the Claude Design "Atlas Console" project.
+   These are plain CSS custom properties + component classes (NOT Tailwind
+   @theme tokens, so they don't emit utilities). The shell, sidebar and the two
+   dashboard widgets consume them. Brand-critical values are bridged onto the
+   evermore palette above: the primary action blue is already #0068dc (Signal),
+   the typeface stays Figtree, and mono falls back to the system monospace stack.
+   ──────────────────────────────────────────────────────────────────────── */
+:root {
+  /* Primitives — Navy (brand spine) */
+  --navy-50: #eef1f8; --navy-100: #d6def0; --navy-200: #adbce0; --navy-300: #7e94cc;
+  --navy-400: #4e6bb5; --navy-500: #2e4a9e; --navy-600: #1f3680; --navy-700: #182a66;
+  --navy-800: #0f1c45; --navy-900: #0a1430;
+  /* Primitives — Blue (action) · 500 == evermore Signal */
+  --blue-50: #eaf3ff; --blue-100: #cfe3ff; --blue-200: #9fc6ff; --blue-300: #66a4ff;
+  --blue-400: #3385f5; --blue-500: #0068dc; --blue-600: #0556b4; --blue-700: #08458c;
+  /* Primitives — Green (success) */
+  --green-50: #ecfaf0; --green-100: #cff2da; --green-200: #a0e4b9; --green-300: #66d08f;
+  --green-400: #34be68; --green-500: #1fa855; --green-600: #178544; --green-700: #136b38;
+  /* Primitives — Teal (info / secondary accent) */
+  --teal-50: #e8fafa; --teal-100: #c6f1f1; --teal-200: #93e4e4; --teal-300: #57d0d0;
+  --teal-400: #28bcbc; --teal-500: #00a6a6; --teal-600: #058585; --teal-700: #086a6a;
+  /* Primitives — Neutral */
+  --neutral-0: #ffffff; --neutral-50: #f8f9fb; --neutral-100: #f1f3f7; --neutral-200: #e4e7ee;
+  --neutral-300: #cdd2dd; --neutral-400: #a6aebf; --neutral-500: #7b8499; --neutral-600: #5a6275;
+  --neutral-700: #424859; --neutral-800: #2a2f3c; --neutral-900: #181b24;
+  /* Primitives — Amber (warning) */
+  --amber-50: #fff8e6; --amber-100: #fdecbf; --amber-200: #fad773; --amber-300: #f5c038;
+  --amber-400: #eaa300; --amber-500: #c98500; --amber-600: #a06a00; --amber-700: #7a5100;
+  /* Primitives — Red (danger) */
+  --red-50: #fdecec; --red-100: #fad2d2; --red-200: #f2a0a0; --red-300: #e96b6b;
+  --red-400: #de3c3c; --red-500: #c42121; --red-600: #9e1818; --red-700: #7a1212;
+
+  /* Semantics — Text */
+  --color-text-primary: var(--neutral-900); --color-text-secondary: var(--neutral-600);
+  --color-text-tertiary: var(--neutral-500); --color-text-link: var(--blue-500);
+  --color-text-success: var(--green-700); --color-text-warning: var(--amber-700);
+  --color-text-danger: var(--red-600);
+  /* Semantics — Surface / background */
+  --color-bg-page: var(--neutral-50); --color-bg-surface: var(--neutral-0);
+  --color-bg-surface-sunken: var(--neutral-100); --color-bg-hover: var(--neutral-100);
+  --color-bg-brand-subtle: var(--navy-50);
+  /* Semantics — Border */
+  --color-border-default: var(--neutral-200); --color-border-strong: var(--neutral-300);
+  --color-border-subtle: var(--neutral-100); --color-border-input: var(--neutral-300);
+  --color-border-focus: var(--blue-500);
+  /* Semantics — Action */
+  --color-action-primary: var(--blue-500); --color-action-primary-hover: var(--blue-600);
+  --color-action-danger: var(--red-500); --color-action-danger-hover: var(--red-600);
+  /* Semantics — Status */
+  --color-success: var(--green-500); --color-warning: var(--amber-500);
+  --color-danger: var(--red-500); --color-info: var(--teal-500);
+  --viz-1: var(--blue-500);
+
+  /* Radius / elevation / motion (subset used by the shell) */
+  --shadow-xs: 0 1px 2px rgb(13 15 21 / 0.05);
+  --shadow-sm: 0 1px 3px rgb(13 15 21 / 0.08), 0 1px 2px rgb(13 15 21 / 0.06);
+  --shadow-lg: 0 12px 24px rgb(13 15 21 / 0.1), 0 4px 8px rgb(13 15 21 / 0.06);
+  --shadow-xl: 0 24px 48px rgb(13 15 21 / 0.14), 0 8px 16px rgb(13 15 21 / 0.08);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Type — keep Figtree; data/code use the system monospace stack */
+  --font-display: var(--font-figtree), "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+/* ---- Shared bits: text tones, mono, chips, buttons, cards ---- */
+.ac-muted { color: var(--color-text-secondary); }
+.ac-tert { color: var(--color-text-tertiary); }
+.ac-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.ac-tnum { font-variant-numeric: tabular-nums; }
+.ac-ovl {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.ac-card {
+  background: var(--color-bg-surface); border: 1px solid var(--color-border-subtle);
+  border-radius: 10px; box-shadow: var(--shadow-xs);
+}
+.ac-pad { padding: 16px; }
+.ac-cardh { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 13px; }
+.ac-cardt { font-size: 13px; font-weight: 600; color: var(--color-text-primary); }
+
+.ac-chip {
+  display: inline-flex; align-items: center; gap: 5px; height: 21px; padding: 0 8px;
+  border-radius: 9999px; font-size: 11px; font-weight: 600; white-space: nowrap; line-height: 1;
+}
+.ac-chip i { font-size: 12px; }
+.s-active { color: var(--green-700); background: var(--green-50); }
+.s-info { color: var(--teal-700); background: var(--teal-50); }
+.s-pastdue { color: var(--amber-700); background: var(--amber-50); }
+.s-neutral { color: var(--neutral-700); background: var(--neutral-100); }
+.s-plan { color: var(--navy-700); background: var(--navy-50); }
+.s-danger { color: var(--red-600); background: var(--red-50); }
+
+.ac-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px;
+  padding: 0 12px; border-radius: 6px; font-size: 13px; font-weight: 600; font-family: inherit;
+  cursor: pointer; border: 1px solid transparent; white-space: nowrap; transition: background 0.12s, color 0.12s;
+}
+.ac-btn.sm { height: 27px; padding: 0 9px; font-size: 12px; }
+.b-pri { background: var(--color-action-primary); color: #fff; }
+.b-pri:hover { background: var(--color-action-primary-hover); }
+.b-sec { background: var(--color-bg-surface); color: var(--color-text-primary); border-color: var(--color-border-input); }
+.b-sec:hover { background: var(--color-bg-hover); }
+.b-ghost { background: transparent; color: var(--color-text-tertiary); }
+.b-ghost:hover { background: var(--color-bg-hover); color: var(--color-text-primary); }
+
+.ac-bar { height: 7px; border-radius: 9999px; background: var(--color-bg-surface-sunken); overflow: hidden; }
+.ac-bar > i { display: block; height: 100%; border-radius: 9999px; }
+.ac-av { display: inline-flex; align-items: center; justify-content: center; border-radius: 9999px; color: #fff; font-weight: 700; flex: none; }
+.ac-dot { width: 7px; height: 7px; border-radius: 9999px; flex: none; }
+
+.ac-seg { display: inline-flex; background: var(--color-bg-surface-sunken); border-radius: 7px; padding: 3px; gap: 2px; }
+.ac-seg button {
+  border: 0; background: transparent; font-family: inherit; font-size: 12px; font-weight: 600;
+  color: var(--color-text-secondary); padding: 4px 11px; border-radius: 5px; cursor: pointer;
+}
+.ac-seg button.on { background: var(--color-bg-surface); color: var(--color-text-primary); box-shadow: var(--shadow-xs); }
+
+.ac-ssrow { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--color-border-subtle); }
+.ac-ssrow:last-child { border-bottom: 0; }
+.ac-crit {
+  font-size: 8.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--color-text-tertiary); background: var(--color-bg-surface-sunken);
+  padding: 1px 5px; border-radius: 4px; line-height: 1.6; flex: none;
+}
+
+.ac-sk {
+  background: linear-gradient(90deg, var(--neutral-100) 25%, var(--neutral-200) 37%, var(--neutral-100) 63%);
+  background-size: 400% 100%; border-radius: 5px; animation: ac-sksh 1.4s linear infinite;
+}
+@keyframes ac-sksh { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+.ac-spin { animation: ac-spin 0.8s linear infinite; }
+@keyframes ac-spin { to { transform: rotate(360deg); } }
+@keyframes ac-pop { from { opacity: 0; transform: translateY(-8px) scale(0.985); } to { opacity: 1; transform: none; } }
+
+/* ---- Top bar ---- */
+.ac-shell { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+.ac-topbar {
+  height: 56px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 16px;
+  background: var(--color-bg-surface); border-bottom: 1px solid var(--color-border-default);
+  box-shadow: 0 1px 2px rgb(16 24 40 / 0.03); z-index: 1100;
+}
+
+/* ---- Side nav ---- */
+.ac-nav {
+  width: 244px; flex: none; background: var(--color-bg-surface);
+  border-right: 1px solid var(--color-border-default); padding: 10px 12px 12px;
+  display: flex; flex-direction: column; gap: 1px; overflow-y: auto;
+  transition: width 0.18s var(--ease-standard), transform 0.2s var(--ease-standard);
+}
+/* Collapse only takes effect on desktop; the mobile drawer always shows labels. */
+@media (min-width: 1024px) {
+  .ac-nav.is-collapsed { width: 64px; }
+  .ac-nav.is-collapsed .ac-nav-label,
+  .ac-nav.is-collapsed .ac-nav-badge,
+  .ac-nav.is-collapsed .ac-nav-ovl,
+  .ac-nav.is-collapsed .ac-nav-rule { display: none; }
+  .ac-nav.is-collapsed .ac-nav-item { justify-content: center; padding: 0; gap: 0; }
+  .ac-nav.is-collapsed .ac-nav-head { justify-content: center; padding: 0; }
+}
+.ac-nav-item {
+  display: flex; align-items: center; gap: 11px; height: 36px; padding: 0 11px; border-radius: 8px;
+  font-size: 13px; font-weight: 500; color: var(--color-text-secondary); cursor: pointer;
+  position: relative; user-select: none; transition: background 0.12s, color 0.12s;
+  width: 100%; border: 0; background: transparent; font-family: inherit; text-align: left;
+}
+.ac-nav-item > i { color: var(--color-text-tertiary); transition: color 0.12s; flex: none; }
+.ac-nav-item:hover { background: var(--color-bg-hover); color: var(--color-text-primary); }
+.ac-nav-item:hover > i { color: var(--color-text-secondary); }
+.ac-nav-item.on { background: var(--color-bg-brand-subtle); color: var(--color-text-link); font-weight: 600; }
+.ac-nav-item.on > i { color: var(--color-action-primary); }
+.ac-nav-item.on::before {
+  content: ""; position: absolute; left: -12px; top: 7px; bottom: 7px; width: 3px;
+  background: var(--color-action-primary); border-radius: 0 3px 3px 0;
+}
+.ac-nav-item[aria-disabled="true"] { cursor: default; color: var(--color-text-tertiary); }
+.ac-nav-item[aria-disabled="true"]:hover { background: transparent; color: var(--color-text-tertiary); }
+.ac-nav-item[aria-disabled="true"]:hover > i { color: var(--color-text-tertiary); }
+.ac-nav-badge {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--color-text-tertiary); background: var(--color-bg-surface-sunken); min-width: 18px;
+  height: 18px; padding: 0 6px; border-radius: 9999px; display: inline-flex; align-items: center;
+  justify-content: center; line-height: 1;
+}
+.ac-nav-rule { height: 1px; background: var(--color-border-subtle); margin: 7px 1px; }
+.ac-nav-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 30px; padding: 0 4px 0 11px; margin-bottom: 4px; }
+.ac-nav-head-t { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-tertiary); }
+.ac-nav-toggle {
+  display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+  border: 0; border-radius: 7px; background: transparent; color: var(--color-text-tertiary);
+  cursor: pointer; flex: none; transition: background 0.12s, color 0.12s;
+}
+.ac-nav-toggle:hover { background: var(--color-bg-hover); color: var(--color-text-primary); }
+.ac-nav-ovl { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--color-text-tertiary); padding: 15px 11px 5px; }
+
+.ac-scroll { scrollbar-width: thin; scrollbar-color: var(--neutral-300) transparent; }
+.ac-scroll::-webkit-scrollbar { width: 11px; height: 11px; }
+.ac-scroll::-webkit-scrollbar-thumb { background: var(--neutral-300); border-radius: 9999px; border: 3px solid var(--color-bg-page); }
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

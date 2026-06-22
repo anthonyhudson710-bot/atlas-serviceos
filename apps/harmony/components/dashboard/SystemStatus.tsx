@@ -8,13 +8,14 @@ import {
   ArrowsClockwise,
   CheckCircle,
   Circle,
+  CircleNotch,
   Clock,
+  Info,
   WarningCircle,
-  WarningOctagon,
+  WifiSlash,
   XCircle,
   type Icon,
 } from "@phosphor-icons/react";
-import { Card } from "@/components/ui/Card";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://api.atlasfsm.com";
 const POLL_MS = 30_000;
@@ -45,20 +46,25 @@ const STATE_ICON: Record<ComponentState, Icon> = {
   unknown: Circle,
 };
 const STATE_COLOR: Record<ComponentState, string> = {
-  operational: "text-success",
-  degraded: "text-warning",
-  down: "text-error",
-  unknown: "text-muted-2",
+  operational: "var(--green-600)",
+  degraded: "var(--amber-500)",
+  down: "var(--red-500)",
+  unknown: "var(--color-text-tertiary)",
 };
 const OVERALL_LABEL: Record<Overall, string> = {
   operational: "Operational",
   degraded: "Degraded",
   down: "Major outage",
 };
-const OVERALL_BADGE: Record<Overall, string> = {
-  operational: "bg-success/10 text-success",
-  degraded: "bg-warning/10 text-warning",
-  down: "bg-error/10 text-error",
+const OVERALL_CHIP: Record<Overall, string> = {
+  operational: "s-active",
+  degraded: "s-pastdue",
+  down: "s-danger",
+};
+const OVERALL_ICON: Record<Overall, Icon> = {
+  operational: CheckCircle,
+  degraded: WarningCircle,
+  down: XCircle,
 };
 
 function agoLabel(seconds: number): string {
@@ -123,28 +129,26 @@ export function SystemStatus() {
     : [];
 
   return (
-    <Card className="p-5">
+    <div className="ac-card ac-pad">
       {/* Header */}
-      <div className="flex items-start justify-between gap-3">
+      <div className="ac-cardh items-start">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-base font-bold text-foreground">System status</h2>
+            <span className="ac-cardt">System status</span>
             {data &&
               (stale ? (
-                <span className="inline-flex items-center rounded-full bg-surface-2 px-2 py-0.5 text-xs font-semibold text-muted-2">
-                  Last known: {OVERALL_LABEL[data.overall]}
-                </span>
+                <span className="ac-chip s-neutral">Last known: {OVERALL_LABEL[data.overall]}</span>
               ) : (
                 <OverallBadge overall={data.overall} />
               ))}
             {loading && !data && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-xs font-semibold text-muted-2">
-                <ArrowsClockwise size={12} className="animate-spin" aria-hidden="true" />
+              <span className="ac-chip s-neutral">
+                <CircleNotch size={12} className="ac-spin" aria-hidden="true" />
                 Checking…
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-xs text-muted-2">
+          <p className="ac-tert mt-[3px] text-[11px]">
             Platform · shared stack
             {data && data.environment !== "production" ? ` · ${data.environment}` : ""}
           </p>
@@ -152,21 +156,19 @@ export function SystemStatus() {
 
         {data && (
           <div className="flex shrink-0 flex-col items-end gap-1">
-            <button
-              type="button"
-              onClick={() => void load()}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:text-action focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-            >
-              <ArrowsClockwise
-                size={15}
-                weight="bold"
-                aria-hidden="true"
-                className={refreshing ? "animate-spin" : ""}
-              />
-              Refresh
-            </button>
-            <span className="inline-flex items-center gap-1 text-xs text-muted-2">
-              <Clock size={13} aria-hidden="true" />
+            {refreshing ? (
+              <button type="button" className="ac-btn b-ghost sm cursor-default opacity-60" disabled>
+                <CircleNotch size={13} className="ac-spin" aria-hidden="true" />
+                Refreshing…
+              </button>
+            ) : (
+              <button type="button" onClick={() => void load()} className="ac-btn b-ghost sm">
+                <ArrowsClockwise size={13} aria-hidden="true" />
+                Refresh
+              </button>
+            )}
+            <span className="ac-tert flex items-center gap-[5px] text-[11px]">
+              <Clock size={12} aria-hidden="true" />
               Checked {agoLabel(secondsAgo)}
             </span>
           </div>
@@ -181,35 +183,39 @@ export function SystemStatus() {
       ) : data ? (
         <>
           {stale && (
-            <p className="mt-4 rounded-lg bg-warning/10 px-3 py-2 text-xs font-medium text-warning">
+            <div className="mb-[10px] flex items-center gap-2 rounded-md border border-[var(--amber-200)] bg-[var(--amber-50)] px-[10px] py-[7px] text-[11.5px] font-medium text-[var(--color-text-warning)]">
+              <Clock size={14} weight="fill" aria-hidden="true" className="shrink-0" />
               Data may be stale — last successful check {agoLabel(secondsAgo)}.
-            </p>
+            </div>
           )}
-          <ul className="mt-3">
+          <div role="list">
             {data.components.map((c) => (
               <StatusRow key={c.key} component={c} />
             ))}
-          </ul>
+          </div>
           {data.overall === "degraded" && downNonCritical.length > 0 && (
-            <p className="mt-3 flex items-center gap-2 rounded-lg bg-warning/10 px-3 py-2 text-xs font-medium text-warning">
-              <WarningCircle size={15} weight="fill" aria-hidden="true" />
+            <div className="mt-[11px] flex items-start gap-[7px] rounded-md border border-[var(--amber-200)] bg-[var(--amber-50)] px-[10px] py-[7px] text-[11.5px] leading-[1.45] text-[var(--color-text-secondary)]">
+              <Info
+                size={13}
+                weight="fill"
+                aria-hidden="true"
+                className="mt-px shrink-0 text-[var(--color-text-warning)]"
+              />
               {downNonCritical.length} non-critical{" "}
-              {downNonCritical.length === 1 ? "service" : "services"} down · core
-              platform (API + Database) unaffected
-            </p>
+              {downNonCritical.length === 1 ? "service" : "services"} down · core platform (API +
+              Database) unaffected
+            </div>
           )}
         </>
       ) : null}
-    </Card>
+    </div>
   );
 }
 
 function OverallBadge({ overall }: { overall: Overall }) {
-  const Glyph = overall === "operational" ? CheckCircle : overall === "degraded" ? WarningCircle : XCircle;
+  const Glyph = OVERALL_ICON[overall];
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${OVERALL_BADGE[overall]}`}
-    >
+    <span className={`ac-chip ${OVERALL_CHIP[overall]}`}>
       <Glyph size={13} weight="fill" aria-hidden="true" />
       {OVERALL_LABEL[overall]}
     </span>
@@ -227,74 +233,76 @@ function StatusRow({ component: c }: { component: StatusComponent }) {
           ? "not monitored"
           : "operational";
   return (
-    <li className="flex items-center justify-between gap-4 border-t border-border-subtle py-3 first:border-t-0">
-      <div className="flex min-w-0 items-center gap-3">
-        <Glyph
-          size={20}
-          weight={c.state === "unknown" ? "regular" : "fill"}
-          className={STATE_COLOR[c.state]}
-          aria-hidden="true"
-        />
-        <span className="font-medium text-foreground">{c.label}</span>
-        {c.critical && (
-          <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-2">
-            Critical
-          </span>
-        )}
-      </div>
-      <div className="shrink-0 text-right text-sm">
-        {c.detail ? (
-          <span className={`${STATE_COLOR[c.state]} font-medium`}>{c.detail}</span>
-        ) : c.latencyMs !== null ? (
-          <span className="tabular-nums text-muted-2">{c.latencyMs.toLocaleString()} ms</span>
-        ) : (
-          <span className="text-muted-2">—</span>
-        )}
-      </div>
-      <span className="sr-only">
-        {c.label}: {stateWord}
-        {c.detail ? ` — ${c.detail}` : c.latencyMs !== null ? ` — ${c.latencyMs} ms` : ""}
-      </span>
-    </li>
+    <div
+      className="ac-ssrow"
+      role="listitem"
+      aria-label={`${c.label}: ${stateWord}${
+        c.detail ? ` — ${c.detail}` : c.latencyMs !== null ? ` — ${c.latencyMs} ms` : ""
+      }`}
+    >
+      <Glyph
+        size={16}
+        weight={c.state === "unknown" ? "regular" : "fill"}
+        style={{ color: STATE_COLOR[c.state] }}
+        className="shrink-0"
+        aria-hidden="true"
+      />
+      <span className="text-[13px] font-medium text-[var(--color-text-primary)]">{c.label}</span>
+      {c.critical && <span className="ac-crit">Critical</span>}
+      <span className="flex-1" />
+      {c.detail ? (
+        <span
+          className="ac-mono max-w-[160px] text-right text-[11px] font-semibold leading-[1.35]"
+          style={{ color: STATE_COLOR[c.state] }}
+        >
+          {c.detail}
+        </span>
+      ) : c.latencyMs !== null ? (
+        <span className="ac-mono ac-tert text-[12px]">{c.latencyMs.toLocaleString()} ms</span>
+      ) : (
+        <span className="ac-tert">—</span>
+      )}
+    </div>
   );
 }
 
 function SkeletonRows() {
   return (
-    <ul className="mt-3" aria-hidden="true">
+    <div aria-hidden="true">
       {[0, 1, 2, 3, 4].map((i) => (
-        <li
-          key={i}
-          className="flex items-center justify-between gap-4 border-t border-border-subtle py-3 first:border-t-0"
-        >
-          <div className="flex items-center gap-3">
-            <span className="size-5 animate-pulse rounded-full bg-surface-2" />
-            <span className="h-4 w-28 animate-pulse rounded bg-surface-2" />
-          </div>
-          <span className="h-4 w-12 animate-pulse rounded bg-surface-2" />
-        </li>
+        <div key={i} className="ac-ssrow">
+          <span className="ac-sk size-4 shrink-0 rounded-full" />
+          <span className="ac-sk h-[11px] w-[100px]" />
+          <span className="flex-1" />
+          <span className="ac-sk h-[10px] w-[44px]" />
+        </div>
       ))}
-    </ul>
+    </div>
   );
 }
 
 function Unreachable({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="mt-4 flex flex-col items-start gap-2">
-      <div className="flex items-center gap-2">
-        <WarningOctagon size={20} weight="fill" className="text-error" aria-hidden="true" />
-        <span className="font-bold text-foreground">Can&apos;t reach status service</span>
+    <div className="flex flex-col items-start gap-3 pt-1">
+      <div className="flex gap-[10px]">
+        <WifiSlash
+          size={20}
+          weight="fill"
+          className="mt-px shrink-0 text-[var(--color-text-danger)]"
+          aria-hidden="true"
+        />
+        <div>
+          <div className="text-[13px] font-semibold text-[var(--color-text-primary)]">
+            Can&apos;t reach status service
+          </div>
+          <p className="ac-muted mt-[3px] text-[12px] leading-[1.5]">
+            The <code className="ac-mono">/status</code> endpoint didn&apos;t respond. The API may be
+            down or unreachable from your network.
+          </p>
+        </div>
       </div>
-      <p className="text-sm text-muted">
-        The <code className="rounded px-1 font-mono">/status</code> endpoint didn&apos;t
-        respond. The API may be down or unreachable from your network.
-      </p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-      >
-        <ArrowsClockwise size={15} weight="bold" aria-hidden="true" />
+      <button type="button" onClick={onRetry} className="ac-btn b-sec sm">
+        <ArrowsClockwise size={14} aria-hidden="true" />
         Retry
       </button>
     </div>
