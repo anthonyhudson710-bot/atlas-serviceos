@@ -8,6 +8,9 @@ export interface RecordInput {
   latencyMs: number;
   route: string;
   method: string;
+  ip: string;
+  ua: string;
+  bot: boolean;
 }
 
 export interface TrafficBucket {
@@ -20,6 +23,14 @@ export interface TrafficBucket {
   p95: number | null;
 }
 
+export interface TrafficClient {
+  ip: string;
+  count: number;
+  errorRate: number;
+  ua: string;
+  bot: boolean;
+}
+
 export interface TrafficSnapshot {
   window: string;
   since: string;
@@ -27,27 +38,37 @@ export interface TrafficSnapshot {
   excludes: string[];
   total: number;
   reqPerSec: number;
+  automatedPct: number | null;
   statusMix: Record<string, number>;
   statusCodes: Record<string, number>;
   latencyMs: { p50: number; p95: number; p99: number } | null;
   buckets: TrafficBucket[];
   topRoutes: Array<{ route: string; count: number; errorRate: number }>;
+  topClients: TrafficClient[];
 }
 
-// Latency histogram bucket upper bounds in ms; an extra overflow bucket trails.
 const LAT_BOUNDS = [5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
 const HIST_LEN = LAT_BOUNDS.length + 1;
 
-const MAX_MINUTES = 60; // widest window the dashboard requests
-const FLUSH_MS = 10_000; // persist the live minute(s) this often
+const MAX_MINUTES = 60;
+const FLUSH_MS = 10_000;
 const RETENTION_DAYS = 7;
 const CLEANUP_MS = 60 * 60_000;
 const ROUTE_CAP = 100;
+const CLIENT_CAP = 50;
 const EXCLUDES = ["/health", "/status", "/metrics"];
+
+interface ClientAgg {
+  count: number;
+  errors: number;
+  ua: string;
+  bot: boolean;
+}
 
 interface MinuteAgg {
   minuteMs: number;
   total: number;
+  bots: number;
   c2xx: number;
   c3xx: number;
   c4xx: number;
@@ -55,14 +76,17 @@ interface MinuteAgg {
   codes: Record<string, number>;
   hist: number[];
   routes: Map<string, { count: number; errors: number }>;
+  clients: Map<string, ClientAgg>;
 }
 
 /**
- * Persistent (Tier-2) traffic metrics. Requests are aggregated in memory per
- * minute and flushed to Postgres, so the data survives API redeploys/restarts.
- * Reads come from Postgres (overlaid with the still-in-memory live minute for
- * freshness). Scope is still "requests that reach this API" — for all-ingress
- * (incl. 502s), the same contract can later be fed from Caddy access logs.
+ * Persistent (Tier-2) traffic metrics. Requests aggregate in memory per minute
+ * and flush to Postgres, so the data survives API redeploys/restarts. Tracks
+ * counts/codes/latency, per-route tallies, and per-client attribution (IP +
+ * user-agent + bot heuristic) so the dashboard can show *who* is hitting the API.
+ *
+ * Scope is "requests that reach this API". For all-ingress (every subdomain +
+ * 502s) the same contract can later be fed from Caddy access logs.
  */
 @Injectable()
 export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
@@ -79,20 +103,19 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
   private lastCleanup = 0;
 
   async onModuleInit(): Promise<void> {
-    // Restore the current minute so a mid-minute restart keeps its earlier count.
     const minuteMs = currentMinuteMs();
     try {
       const row = await this.repo.findOne({ where: { minute: new Date(minuteMs) } });
       if (row) this.buffer.set(minuteMs, entityToAgg(row));
     } catch {
-      // DB not ready yet — fine, we start fresh and flush later.
+      // DB not ready — start fresh, flush later.
     }
     this.flushTimer = setInterval(() => void this.flush(), FLUSH_MS);
   }
 
   async onModuleDestroy(): Promise<void> {
     if (this.flushTimer) clearInterval(this.flushTimer);
-    await this.flush(); // capture the live partial minute before shutdown/deploy
+    await this.flush();
   }
 
   record(input: RecordInput): void {
@@ -104,6 +127,8 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
     }
 
     agg.total++;
+    if (input.bot) agg.bots++;
+
     switch (Math.floor(input.statusCode / 100)) {
       case 2:
         agg.c2xx++;
@@ -118,19 +143,34 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
         agg.c5xx++;
         break;
     }
+
     const code = String(input.statusCode);
     agg.codes[code] = (agg.codes[code] ?? 0) + 1;
     agg.hist[histIndex(input.latencyMs)]++;
 
-    let key = `${input.method} ${input.route}`;
-    if (!agg.routes.has(key) && agg.routes.size >= ROUTE_CAP) key = "other";
-    let r = agg.routes.get(key);
-    if (!r) {
-      r = { count: 0, errors: 0 };
-      agg.routes.set(key, r);
+    let rkey = `${input.method} ${input.route}`;
+    if (!agg.routes.has(rkey) && agg.routes.size >= ROUTE_CAP) rkey = "other";
+    const route = agg.routes.get(rkey) ?? { count: 0, errors: 0 };
+    route.count++;
+    if (input.statusCode >= 500) route.errors++;
+    agg.routes.set(rkey, route);
+
+    let ckey = input.ip;
+    const overflow = !agg.clients.has(ckey) && agg.clients.size >= CLIENT_CAP;
+    if (overflow) ckey = "other";
+    const client = agg.clients.get(ckey) ?? {
+      count: 0,
+      errors: 0,
+      ua: ckey === "other" ? "" : input.ua,
+      bot: ckey === "other" ? true : input.bot,
+    };
+    client.count++;
+    if (input.statusCode >= 500) client.errors++;
+    if (ckey !== "other") {
+      client.ua = input.ua;
+      client.bot = input.bot;
     }
-    r.count++;
-    if (input.statusCode >= 500) r.errors++;
+    agg.clients.set(ckey, client);
 
     this.dirty.add(minuteMs);
   }
@@ -143,13 +183,8 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
       this.dirty.clear();
       for (const m of pending) {
         const agg = this.buffer.get(m);
-        if (agg) {
-          // The buffer holds the FULL minute (restored on boot), so a replace
-          // upsert is correct and idempotent on a single instance.
-          await this.repo.upsert(aggToEntity(agg), ["minute"]);
-        }
+        if (agg) await this.repo.upsert(aggToEntity(agg), ["minute"]);
       }
-      // Drop minutes that can no longer receive records (already final in DB).
       const keep = currentMinuteMs() - 60_000;
       for (const m of [...this.buffer.keys()]) if (m < keep) this.buffer.delete(m);
 
@@ -159,7 +194,6 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
         await this.repo.delete({ minute: LessThan(new Date(now - RETENTION_DAYS * 86_400_000)) });
       }
     } catch {
-      // Re-mark so the next cycle retries; never let metrics flushing crash.
       for (const m of this.buffer.keys()) this.dirty.add(m);
     } finally {
       this.flushing = false;
@@ -178,12 +212,12 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
 
     const byMinute = new Map<number, MinuteAgg>();
     for (const row of rows) byMinute.set(row.minute.getTime(), entityToAgg(row));
-    // Overlay the in-memory live minute(s) — fresher than the last flush.
     for (const [m, agg] of this.buffer) {
       if (m >= fromMs && m <= nowMin) byMinute.set(m, agg);
     }
 
     let total = 0;
+    let bots = 0;
     let c2xx = 0;
     let c3xx = 0;
     let c4xx = 0;
@@ -191,11 +225,12 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
     const codes: Record<string, number> = {};
     const hist = new Array<number>(HIST_LEN).fill(0);
     const routes = new Map<string, { count: number; errors: number }>();
+    const clients = new Map<string, ClientAgg>();
     const buckets: TrafficBucket[] = [];
 
     for (let m = fromMs; m <= nowMin; m += 60_000) {
       const agg = byMinute.get(m);
-      const entry: TrafficBucket = {
+      buckets.push({
         t: new Date(m).toISOString(),
         total: agg?.total ?? 0,
         "2xx": agg?.c2xx ?? 0,
@@ -203,11 +238,11 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
         "4xx": agg?.c4xx ?? 0,
         "5xx": agg?.c5xx ?? 0,
         p95: agg ? percentileFromHist(agg.hist, 95) : null,
-      };
-      buckets.push(entry);
+      });
       if (!agg) continue;
 
       total += agg.total;
+      bots += agg.bots;
       c2xx += agg.c2xx;
       c3xx += agg.c3xx;
       c4xx += agg.c4xx;
@@ -219,6 +254,14 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
         r.count += v.count;
         r.errors += v.errors;
         routes.set(k, r);
+      }
+      for (const [ip, v] of agg.clients) {
+        const c = clients.get(ip) ?? { count: 0, errors: 0, ua: "", bot: v.bot };
+        c.count += v.count;
+        c.errors += v.errors;
+        if (v.ua) c.ua = v.ua;
+        c.bot = v.bot;
+        clients.set(ip, c);
       }
     }
 
@@ -244,7 +287,12 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
         : null;
 
     const topRoutes = [...routes.entries()]
-      .map(([route, r]) => ({ route, count: r.count, errorRate: r.count > 0 ? round(r.errors / r.count, 4) : 0 }))
+      .map(([route, r]) => ({ route, count: r.count, errorRate: rate(r.errors, r.count) }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+
+    const topClients = [...clients.entries()]
+      .map(([ip, c]) => ({ ip, count: c.count, errorRate: rate(c.errors, c.count), ua: c.ua, bot: c.bot }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 8);
 
@@ -255,11 +303,13 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
       excludes: EXCLUDES,
       total,
       reqPerSec: round(total / elapsedSec, 3),
+      automatedPct: total > 0 ? round(bots / total, 4) : null,
       statusMix,
       statusCodes: codes,
       latencyMs,
       buckets,
       topRoutes,
+      topClients,
     };
   }
 
@@ -283,6 +333,7 @@ function emptyAgg(minuteMs: number): MinuteAgg {
   return {
     minuteMs,
     total: 0,
+    bots: 0,
     c2xx: 0,
     c3xx: 0,
     c4xx: 0,
@@ -290,6 +341,7 @@ function emptyAgg(minuteMs: number): MinuteAgg {
     codes: {},
     hist: new Array<number>(HIST_LEN).fill(0),
     routes: new Map(),
+    clients: new Map(),
   };
 }
 
@@ -297,6 +349,7 @@ function aggToEntity(agg: MinuteAgg): TrafficMinute {
   const e = new TrafficMinute();
   e.minute = new Date(agg.minuteMs);
   e.total = agg.total;
+  e.bots = agg.bots;
   e.c2xx = agg.c2xx;
   e.c3xx = agg.c3xx;
   e.c4xx = agg.c4xx;
@@ -304,6 +357,7 @@ function aggToEntity(agg: MinuteAgg): TrafficMinute {
   e.codes = agg.codes;
   e.latHist = agg.hist;
   e.routes = Object.fromEntries(agg.routes);
+  e.clients = Object.fromEntries(agg.clients);
   return e;
 }
 
@@ -315,6 +369,7 @@ function entityToAgg(row: TrafficMinute): MinuteAgg {
   return {
     minuteMs: row.minute.getTime(),
     total: row.total,
+    bots: row.bots ?? 0,
     c2xx: row.c2xx,
     c3xx: row.c3xx,
     c4xx: row.c4xx,
@@ -322,6 +377,7 @@ function entityToAgg(row: TrafficMinute): MinuteAgg {
     codes: row.codes ?? {},
     hist,
     routes: new Map(Object.entries(row.routes ?? {})),
+    clients: new Map(Object.entries(row.clients ?? {})),
   };
 }
 
@@ -330,7 +386,6 @@ function histIndex(ms: number): number {
   return HIST_LEN - 1;
 }
 
-// Interpolated percentile from a summed histogram. Returns null for no samples.
 function percentileFromHist(hist: number[], p: number): number | null {
   let total = 0;
   for (const c of hist) total += c;
@@ -349,6 +404,10 @@ function percentileFromHist(hist: number[], p: number): number | null {
     }
   }
   return LAT_BOUNDS[LAT_BOUNDS.length - 1];
+}
+
+function rate(errors: number, count: number): number {
+  return count > 0 ? round(errors / count, 4) : 0;
 }
 
 function round(n: number, dp: number): number {

@@ -44,8 +44,10 @@ interface TrafficSnapshot {
   statusMix: Record<string, number>;
   statusCodes: Record<string, number>;
   latencyMs: { p50: number; p95: number; p99: number } | null;
+  automatedPct: number | null;
   buckets: TrafficBucket[];
   topRoutes: { route: string; count: number; errorRate: number }[];
+  topClients: { ip: string; count: number; errorRate: number; ua: string; bot: boolean }[];
 }
 
 // Status classes, ordered top→bottom in a stacked bar (2xx ends up at the base).
@@ -318,6 +320,39 @@ function Loaded({
                   </span>
                 )}
                 <span className="ac-mono ac-tert w-10 text-right tabular-nums">{r.count.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Top sources — who is hitting the API */}
+      {data.topClients.length > 0 && (
+        <div className="mt-4 border-t border-[var(--color-border-subtle)] pt-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="ac-tert text-[11px] font-medium">Top sources</p>
+            {data.automatedPct != null && (
+              <span className="ac-tert text-[11px]">{fmtPct(data.automatedPct)} automated</span>
+            )}
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {data.topClients.slice(0, 5).map((c) => (
+              <div key={c.ip} className="flex items-center gap-2 text-[12px]">
+                <span className={`ac-chip ${c.bot ? "s-pastdue" : "s-neutral"} shrink-0`} style={{ height: 17 }}>
+                  {c.bot ? "bot" : "browser"}
+                </span>
+                <span className="ac-mono shrink-0 text-[var(--color-text-primary)]">{c.ip}</span>
+                <span className="ac-muted min-w-0 flex-1 truncate text-[11px]" title={c.ua}>
+                  {c.ua || "—"}
+                </span>
+                {c.errorRate > 0 && (
+                  <span className="ac-chip s-danger shrink-0" style={{ height: 17 }}>
+                    {fmtPct(c.errorRate)} 5xx
+                  </span>
+                )}
+                <span className="ac-mono ac-tert w-12 shrink-0 text-right tabular-nums">
+                  {c.count.toLocaleString()}
+                </span>
               </div>
             ))}
           </div>

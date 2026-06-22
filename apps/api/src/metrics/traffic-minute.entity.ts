@@ -41,4 +41,12 @@ export class TrafficMinute {
   // route -> { count, errors(5xx) }
   @Column({ type: "jsonb", nullable: true })
   routes!: Record<string, { count: number; errors: number }> | null;
+
+  // requests classified as automated (bot/scanner/monitor) this minute
+  @Column({ type: "int", default: 0 })
+  bots!: number;
+
+  // client IP -> { count, errors(5xx), ua, bot } — capped per minute; overflow → "other"
+  @Column({ type: "jsonb", nullable: true })
+  clients!: Record<string, { count: number; errors: number; ua: string; bot: boolean }> | null;
 }
