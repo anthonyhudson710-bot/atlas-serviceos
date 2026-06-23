@@ -46,7 +46,7 @@ export class TrafficMinute {
   @Column({ type: "int", default: 0 })
   bots!: number;
 
-  // client IP -> { count, errors(5xx), ua, bot } — capped per minute; overflow → "other"
+  // client IP -> { count, errors(5xx), c4xx, ua, bot } — capped per minute; overflow → "other"
   @Column({ type: "jsonb", nullable: true })
-  clients!: Record<string, { count: number; errors: number; ua: string; bot: boolean }> | null;
+  clients!: Record<string, { count: number; errors: number; c4xx: number; ua: string; bot: boolean }> | null;
 }

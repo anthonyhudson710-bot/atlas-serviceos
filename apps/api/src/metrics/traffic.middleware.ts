@@ -4,7 +4,7 @@ import { TrafficMetricsService } from "./traffic-metrics.service";
 // User-agents that are obviously automated. Not exhaustive — bot detection is a
 // heuristic, surfaced as such in the UI.
 const BOT_RE =
-  /\b(bot|crawl|spider|slurp|monitor|uptime|pingdom|curl|wget|python-requests|python-urllib|go-http-client|java|libwww|okhttp|axios|node-fetch|headless|phantom|scrapy|semrush|ahrefs|censys|masscan|zgrab|nmap|nuclei|httpx)\b/i;
+  /bot\b|bot\/|crawl|spider|slurp|scanner|monitor|uptime|pingdom|headless|phantom|curl\/|wget|python-requests|python-urllib|go-http-client|libwww|okhttp|axios\/|node-fetch|\bjava\/|scrapy|semrush|ahrefs|censys|masscan|zgrab|nmap|nuclei|httpx|facebookexternalhit|claudebot|gptbot|oai-searchbot|chatgpt|ccbot|bytespider|petalbot|googlebot|bingbot|yandex|duckduckbot|baiduspider|applebot|amazonbot|mj12bot|dotbot|expanse|internet-measurement/i;
 const BROWSER_RE = /mozilla|applewebkit|gecko|safari|chrome|firefox|edg|opera/i;
 
 function isBot(ua: string): boolean {

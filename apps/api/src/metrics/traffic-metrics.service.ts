@@ -61,6 +61,7 @@ const EXCLUDES = ["/health", "/status", "/metrics"];
 interface ClientAgg {
   count: number;
   errors: number;
+  c4xx: number;
   ua: string;
   bot: boolean;
 }
@@ -161,11 +162,13 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
     const client = agg.clients.get(ckey) ?? {
       count: 0,
       errors: 0,
+      c4xx: 0,
       ua: ckey === "other" ? "" : input.ua,
       bot: ckey === "other" ? true : input.bot,
     };
     client.count++;
     if (input.statusCode >= 500) client.errors++;
+    if (Math.floor(input.statusCode / 100) === 4) client.c4xx++;
     if (ckey !== "other") {
       client.ua = input.ua;
       client.bot = input.bot;
@@ -217,7 +220,6 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
     }
 
     let total = 0;
-    let bots = 0;
     let c2xx = 0;
     let c3xx = 0;
     let c4xx = 0;
@@ -242,7 +244,6 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
       if (!agg) continue;
 
       total += agg.total;
-      bots += agg.bots;
       c2xx += agg.c2xx;
       c3xx += agg.c3xx;
       c4xx += agg.c4xx;
@@ -256,9 +257,10 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
         routes.set(k, r);
       }
       for (const [ip, v] of agg.clients) {
-        const c = clients.get(ip) ?? { count: 0, errors: 0, ua: "", bot: v.bot };
+        const c = clients.get(ip) ?? { count: 0, errors: 0, c4xx: 0, ua: "", bot: v.bot };
         c.count += v.count;
         c.errors += v.errors;
+        c.c4xx += v.c4xx;
         if (v.ua) c.ua = v.ua;
         c.bot = v.bot;
         clients.set(ip, c);
@@ -291,8 +293,16 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
       .sort((a, b) => b.count - a.count)
       .slice(0, 8);
 
+    // A client is "automated" if its UA looks like a bot OR it behaves like a
+    // scanner — nearly all of its requests are 4xx (probing paths that 404),
+    // which catches scanners that spoof a real browser UA.
+    let automated = 0;
     const topClients = [...clients.entries()]
-      .map(([ip, c]) => ({ ip, count: c.count, errorRate: rate(c.errors, c.count), ua: c.ua, bot: c.bot }))
+      .map(([ip, c]) => {
+        const bot = c.bot || (c.count >= 3 && c.c4xx / c.count >= 0.8);
+        if (bot) automated += c.count;
+        return { ip, count: c.count, errorRate: rate(c.errors, c.count), ua: c.ua, bot };
+      })
       .sort((a, b) => b.count - a.count)
       .slice(0, 8);
 
@@ -303,7 +313,7 @@ export class TrafficMetricsService implements OnModuleInit, OnModuleDestroy {
       excludes: EXCLUDES,
       total,
       reqPerSec: round(total / elapsedSec, 3),
-      automatedPct: total > 0 ? round(bots / total, 4) : null,
+      automatedPct: total > 0 ? round(automated / total, 4) : null,
       statusMix,
       statusCodes: codes,
       latencyMs,
@@ -377,7 +387,14 @@ function entityToAgg(row: TrafficMinute): MinuteAgg {
     codes: row.codes ?? {},
     hist,
     routes: new Map(Object.entries(row.routes ?? {})),
-    clients: new Map(Object.entries(row.clients ?? {})),
+    clients: new Map(
+      Object.entries(row.clients ?? {}).map(
+        ([ip, c]): [string, ClientAgg] => [
+          ip,
+          { count: c.count, errors: c.errors, c4xx: c.c4xx ?? 0, ua: c.ua, bot: c.bot },
+        ],
+      ),
+    ),
   };
 }
 
